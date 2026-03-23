@@ -7,7 +7,7 @@ CREATE TABLE `user`
     `email`         TEXT NOT NULL,
     `password_hash` TEXT NOT NULL,
     `role`          TEXT NOT NULL CHECK(`role` IN ('Admin', 'Employee', 'Customer')),
-    `created_at`    TEXT NOT NULL now(),
+    `created_at`    TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`    TEXT NULL
 );
 

@@ -9,7 +9,7 @@ CREATE TABLE `reservation`
     `end_time`   TEXT NOT NULL,
     `guests`     INTEGER NOT NULL,
     `status`     TEXT NOT NULL CHECK(`status` IN ('Pending', 'Confirmed', 'Ongoing', 'Cancelled', 'Completed')),
-    `created_at` TEXT NOT NULL default now(),
+    `created_at` TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TEXT NULL,
     FOREIGN KEY (`user_id`) REFERENCES `user`(`id`),
     FOREIGN KEY (`table_id`) REFERENCES `table`(`id`)

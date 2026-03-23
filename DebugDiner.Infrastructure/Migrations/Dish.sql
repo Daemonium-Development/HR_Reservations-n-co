@@ -8,7 +8,7 @@ CREATE TABLE `dish`
     `description`  TEXT NOT NULL,
     `category`     TEXT NOT NULL CHECK(`category` IN ('Meat', 'Fish', 'Vegetarian', 'Vegan')),
     `allergen_info` TEXT NOT NULL,
-    `created_at`   TEXT NOT NULL default now(),
+    `created_at`   TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`   TEXT NULL
 );
 

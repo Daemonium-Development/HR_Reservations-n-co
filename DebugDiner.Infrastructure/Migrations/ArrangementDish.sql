@@ -3,11 +3,11 @@ DROP TABLE IF EXISTS `arrangement_dish`;
 CREATE TABLE `arrangement_dish`
 (
     `id`          INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-    `dish`        INTEGER NOT NULL,
-    `arrangement` INTEGER NOT NULL,
-    FOREIGN KEY (`dish`) REFERENCES `dish`(`id`),
-    FOREIGN KEY (`arrangement`) REFERENCES `arrangement`(`id`)
+    `dish_id`        INTEGER NOT NULL,
+    `arrangement_id` INTEGER NOT NULL,
+    FOREIGN KEY (`dish_id`) REFERENCES `dish`(`id`),
+    FOREIGN KEY (`arrangement_id`) REFERENCES `arrangement`(`id`)
 );
 
-INSERT INTO `arrangement_dish` (`dish`, `arrangement`)
+INSERT INTO `arrangement_dish` (`dish_id`, `arrangement_id`)
 VALUES (1, 1);

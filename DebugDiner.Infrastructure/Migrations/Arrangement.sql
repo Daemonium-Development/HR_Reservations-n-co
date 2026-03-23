@@ -4,9 +4,9 @@ CREATE TABLE `arrangement`
 (
     `id`         INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     `name`       TEXT NOT NULL,
-    `base_price` TEXT NOT NULL,
+    `base_price` REAL NOT NULL,
     `type`       TEXT NOT NULL CHECK(`type` IN ('TwoCourse', 'ThreeCourse', 'FourCourse', 'Wine')),
-    `created_at` TEXT NOT NULL default now(),
+    `created_at` TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TEXT NULL
 );
 
