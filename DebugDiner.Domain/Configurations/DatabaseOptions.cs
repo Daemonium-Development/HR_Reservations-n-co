@@ -12,7 +12,7 @@ public class DatabaseOptions
         {
             return Path.Combine(Environment.CurrentDirectory, Source);
         }
-        var special = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        var special = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         var adjustedPath = Source.Replace("%APPDATA%", special);
         return adjustedPath;
     }
