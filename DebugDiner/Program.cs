@@ -13,6 +13,8 @@ internal static class Program
     internal static async Task<int> Main(string[] args)
     {
         var special = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        // var logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs", "debug-diner.log");
+        // NOTE: If on mac, replace this with the line above
         var logFilePath = Path.Combine(special, "Debug Diner", "logs", "debug-diner.log");
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel
