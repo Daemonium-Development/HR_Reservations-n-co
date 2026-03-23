@@ -1,18 +1,11 @@
-class TableEntity
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+
+[Table("table")]
+class TableEntity : BaseEntity
 {
-    TableEntity
-    (
-        int id,
-        int capacity,
-        TableType tableType
-    )
-    {
-        Id = id;
-        Capacity = capacity;
-        TableType = tableType;
-    }
-    
-    public int Id { get; set; }
-    public int Capacity { get; set; }
-    public TableType TableType { get; set; }
+    [Column("capacity")]
+    public required int Capacity { get; set; }
+    [Column("type")]
+    public required TableType Type { get; set; }
 }

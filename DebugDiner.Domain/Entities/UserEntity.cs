@@ -1,21 +1,16 @@
-class UserEntity
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Security.Cryptography.X509Certificates;
+using Microsoft.EntityFrameworkCore;
+
+[Table("user")]
+public class UserEntity : BaseEntity
 {
-    public UserEntity
-    (
-        string name,
-        string email,
-        string password,
-        Role role
-    )
-    {
-        Name = name;
-        Email = email;
-        Password = password;
-        Role = role;
-    }
-    
-    public string Name { get; set; }
-    public string Email { get; set; }
-    public string Password { get; set; }
-    public Role Role { get; set; }
+    [Column("name")]
+    public required string Name { get; set; }
+    [Column("email")]
+    public required string Email { get; set; }
+    [Column("password_hash")]
+    public required string PasswordHash { get; set; }
+    [Column("role")]
+    public required Role Role { get; set; }
 }

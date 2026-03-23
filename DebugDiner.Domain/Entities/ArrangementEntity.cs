@@ -1,21 +1,13 @@
-class ArrangementEntity
-{
-    public ArrangementEntity
-    (
-        int id,
-        string name,
-        decimal basePrice,
-        ArrangementType arrangementType
-    )
-    {
-        Id = id;
-        Name = name;
-        BasePrice = basePrice;
-        ArrangementType = arrangementType;
-    }
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public decimal BasePrice { get; set; }
-    public ArrangementType ArrangementType { get; set; }
+[Table("arrangements")]
+public class ArrangementEntity : BaseEntity
+{
+    [Column("name")]
+    public required string Name { get; set; }
+    [Column("base_price")]
+    public required decimal BasePrice { get; set; }
+    [Column("type")]
+    public required ArrangementType Type { get; set; }
 }
