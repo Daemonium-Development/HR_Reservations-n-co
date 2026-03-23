@@ -1,3 +1,6 @@
 ﻿<Solution>
-  <Project Path="ReservationsCo.Core/ReservationsCo.Core.csproj" />
+  <Project Path="DebugDiner.Application/DebugDiner.Application.csproj" />
+  <Project Path="DebugDiner.Domain/DebugDiner.Domain.csproj" />
+  <Project Path="DebugDiner.Infrastructure/DebugDiner.Infrastructure.csproj" />
+  <Project Path="DebugDiner/DebugDiner.csproj" />
 </Solution>
