@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-[Table("reservations")]
-class ReservationEntity : BaseEntity
+[Table("reservation")]
+public class ReservationEntity : BaseEntity
 {
     [Column("user_id")]
     public required int UserId { get; set; }
