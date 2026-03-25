@@ -1,6 +1,6 @@
 ﻿using DebugDiner.Domain.Abstractions;
 
-using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace DebugDiner.Infrastructure.Repositories;
 
@@ -16,7 +16,11 @@ public class UserRepository(ILogger logger) : BaseRepository, IUserRepository
 {
     public async Task<UserEntity?> GetById(int id)
     {
-        if (Connection == null) return null;
+        if (Connection == null)
+        {
+            logger.Error("Database connection is null.");
+            return null;
+        }
 
         var command = Connection.CreateCommand();
         command.CommandText = "SELECT * FROM `user` WHERE id=@id"; 
@@ -38,12 +42,17 @@ public class UserRepository(ILogger logger) : BaseRepository, IUserRepository
             };
         }
 
+        logger.Information("User retrieved from database.");
         return user;
     }
 
     public async Task<IEnumerable<UserEntity>> GetAll()
     {
-        if (Connection == null) return [];
+        if (Connection == null)
+        {
+            logger.Error("Database connection is null.");
+            return [  ];
+        }
 
         var command = Connection.CreateCommand();
         command.CommandText = "SELECT * FROM `user`";
@@ -64,12 +73,17 @@ public class UserRepository(ILogger logger) : BaseRepository, IUserRepository
             });
         }
 
+        logger.Information("Retrieved {0} rows from database.", users.Count);
         return users;
     }
 
     public async Task<IEnumerable<UserEntity>> Create(IEnumerable<UserEntity> users)
     {
-        if (Connection == null) return [ ];
+        if (Connection == null)
+        {
+            logger.Error("Database connection is null.");
+            return [];
+        }
         
         var query = "INSERT INTO `user` (name, email, password_hash, role, updated_at) VALUES (@name, @email, @passwordHash, @role, @updatedAt)";
 
@@ -85,12 +99,17 @@ public class UserRepository(ILogger logger) : BaseRepository, IUserRepository
             await command.ExecuteNonQueryAsync().ConfigureAwait(false);
         }
 
+        logger.Information("Created {0} rows from database.", users.Count());
         return users;
     }
 
     public async Task<IEnumerable<UserEntity>> Update(IEnumerable<UserEntity> users)
     {
-        if (Connection == null) return [ ];
+        if (Connection == null)
+        {
+            logger.Error("Database connection is null.");
+            return [];
+        }
         
         var query = "INSERT OR REPLACE INTO `user` (Id, name, email, password_hash, role, updated_at) VALUES (@Id, @name, @email, @passwordHash, @role, @updatedAt)";
 
@@ -107,12 +126,17 @@ public class UserRepository(ILogger logger) : BaseRepository, IUserRepository
             await command.ExecuteNonQueryAsync().ConfigureAwait(false);
         }
 
+        logger.Information("Updated {0} rows from database.", users.Count());
         return users;
     }
     
     public async Task Delete(IEnumerable<UserEntity> users)
     {
-        if (Connection == null) return;
+        if (Connection == null)
+        {
+            logger.Error("Database connection is null.");
+            return;
+        }
 
         foreach (var user in users.AsEnumerable())
         {
@@ -121,6 +145,8 @@ public class UserRepository(ILogger logger) : BaseRepository, IUserRepository
             command.Parameters.AddWithValue("@id", user.Id);
             await command.ExecuteNonQueryAsync().ConfigureAwait(false);
         }
+        
+        logger.Information("Deleted {0} rows from database.", users.Count());
     }
     
     // SUGGESTION:
