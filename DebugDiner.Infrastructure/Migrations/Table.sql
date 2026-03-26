@@ -9,5 +9,5 @@ CREATE TABLE `table`
     `updated_at` TEXT NULL
 );
 
-INSERT INTO `table` (`capacity`, `type`, `created_at`, `updated_at`)
+INSERT INTO `table` (`capacity`, `type`)
 VALUES (4, 'Bar');

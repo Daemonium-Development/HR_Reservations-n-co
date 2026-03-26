@@ -15,5 +15,5 @@ CREATE TABLE `reservation`
     FOREIGN KEY (`table_id`) REFERENCES `table`(`id`)
 );
 
-INSERT INTO `reservation` (`user_id`, `table_id`, `start_time`, `end_time`, `guests`, `status`, `created_at`, `updated_at`)
+INSERT INTO `reservation` (`user_id`, `table_id`, `start_time`, `end_time`, `guests`, `status`)
 VALUES (1, 1, '2026-03-24 19:00:00', '2026-03-24 21:00:00', 2, 'Confirmed');
