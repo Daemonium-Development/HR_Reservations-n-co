@@ -82,8 +82,9 @@ public class ReservationRepository(ILogger logger) : BaseRepository, IReservatio
         }
         
         var command = Connection.CreateCommand();
-        command.CommandText = "INSERT INTO reservation (user_id, table_id, start_time, end_time, guests, status) " +
-                              "VALUES (@userId, @tableId, @startTime, @endTime, @guests, @status)";
+        command.CommandText = @"INSERT INTO reservation (user_id, table_id, start_time, end_time, guests, status)
+                                VALUES (@userId, @tableId, @startTime, @endTime, @guests, @status);
+                                SELECT last_insert_rowid();";
         
         command.Parameters.AddWithValue("@userId", reservation.UserId);
         command.Parameters.AddWithValue("@tableId", reservation.TableId);
@@ -92,13 +93,10 @@ public class ReservationRepository(ILogger logger) : BaseRepository, IReservatio
         command.Parameters.AddWithValue("@guests", reservation.Guests);
         command.Parameters.AddWithValue("@status", reservation.Status.ToString());
         
-        var reader = await command.ExecuteReaderAsync();
-        logger.Debug($"Reservation with id {reader} created.");
-
-        // if (obj != null)
-        // {
-        //     int id = (int)obj;
-        // }
+        /*var result = await command.ExecuteScalarAsync();
+        var newId = (long)result;
+        
+        logger.Debug($"Reservation with id {newId} created.");*/
 
         return null;
     }
