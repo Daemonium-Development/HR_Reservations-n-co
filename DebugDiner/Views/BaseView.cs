@@ -1,4 +1,4 @@
-using Spectre.Console;
+using Terminal.Gui;
 
 namespace DebugDiner;
 
