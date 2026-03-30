@@ -5,217 +5,163 @@ using Serilog;
 
 namespace DebugDiner.Infrastructure.Repositories;
 
-public class ArrangementRepository(ILogger logger) : IArrangementRepository
+public class ArrangementRepository(ILogger logger, IDataService data) : IArrangementRepository
 {
-    public SqliteConnection? Connection { get; set; }
-    
     public async Task<IEnumerable<ArrangementEntity>> GetItemsAsync(IEnumerable<int>? ids = null)
     {
-        if (Connection == null)
+        if (data.Connection is null)
         {
             logger.Error("Database connection is null.");
             return [];
         }
-
+        var command = data.Connection.CreateCommand();
         if (ids is null)
         {
-            return await GetAll();
+            command.CommandText = QueryConstants.GetAll.Replace("{table}", "`arrangement`");
         }
-        
-        var entityList = new List<ArrangementEntity>();
-        foreach (var id in ids)
+        else
         {
-            var entity = await GetById(id);
-            if (entity is null) continue;
-            entityList.Add(entity);
+            command.CommandText = QueryConstants.GetById
+                .Replace("{table}", "`arrangement`")
+                .Replace("{values}", string.Join(",", ids));
         }
-        return entityList;
-    }
-    
-    private async Task<ArrangementEntity?> GetById(int id)
-    {
-        if (Connection == null)
-        {
-            logger.Error("Database connection is null.");
-            return null;
-        }
-
-        var command = Connection.CreateCommand();
-        command.CommandText = "SELECT * FROM `arrangement` WHERE id=@id"; 
-        command.Parameters.AddWithValue("@id", id);
-
         var reader = await command.ExecuteReaderAsync();
-        ArrangementEntity? arrangement = null;
-        while (reader.Read())
-        {
-            arrangement = new ArrangementEntity
-            {
-                Id = reader.GetInt32(0),
-                Name = reader.GetString(1),
-                BasePrice = reader.GetInt64(2),
-                Type = reader.GetString(3).MapToEnum<ArrangementType>(),
-                CreatedAt = DateTime.Parse(reader.GetString(4)),
-                UpdatedAt = reader.IsDBNull(5) ? default : DateTime.Parse(reader.GetString(5))
-            };
-        }
 
-        logger.Information("Arrangement retrieved from database.");
-        return arrangement;
-    }
-
-    private async Task<IEnumerable<ArrangementEntity>> GetAll()
-    {
-        if (Connection == null)
-        {
-            logger.Error("Database connection is null.");
-            return [];
-        }
-
-        var command = Connection.CreateCommand();
-        command.CommandText = "SELECT * FROM `arrangement`"; 
-
-        var reader = await command.ExecuteReaderAsync();
-        List<ArrangementEntity> arrangements = [];
+        var arrangements = new List<ArrangementEntity>();
         while (reader.Read())
         {
             arrangements.Add(new ArrangementEntity
             {
                 Id = reader.GetInt32(0),
                 Name = reader.GetString(1),
-                BasePrice = reader.GetInt64(2),
+                BasePrice = reader.GetDecimal(2),
                 Type = reader.GetString(3).MapToEnum<ArrangementType>(),
-                CreatedAt = DateTime.Parse(reader.GetString(4)),
-                UpdatedAt = reader.IsDBNull(5) ? default : DateTime.Parse(reader.GetString(5))
+                CreatedAt = reader.GetDateTime(4),
+                UpdatedAt = reader.IsDBNull(5) ? DateTime.Now : reader.GetDateTime(5)
             });
         }
 
-        logger.Information("Arrangements retrieved from database.");
         return arrangements;
     }
 
     public async Task<IEnumerable<ArrangementEntity>> Create(IEnumerable<ArrangementEntity> arrangements)
     {
-        if (Connection == null)
+        if (data.Connection == null)
         {
             logger.Error("Database connection is null.");
             return [];
         }
-        
-        var query = @"INSERT INTO arrangement (name, base_price, type, updated_at)
-                                VALUES (@name, @basePrice, @type, @updatedAt);
-                                RETURNING id;";
 
-        List<ArrangementEntity> createdArrangements = [];
+        string[] columns = ["name", "base_price", "type"];
+        string[] values = ["@name", "@basePrice", "@type"];
 
+        var ids = new List<long>();
         foreach (var arrangement in arrangements.AsEnumerable())
         {
-            var command = Connection.CreateCommand();
-            command.CommandText = query;
-            
-            command.Parameters.AddWithValue("@name", arrangement.Name);
-            command.Parameters.AddWithValue("@basePrice", arrangement.BasePrice);
-            command.Parameters.AddWithValue("@type", arrangement.Type.ToString());
-            command.Parameters.AddWithValue("@updatedAt", DateTime.Now);
-            
-            var result = await command.ExecuteScalarAsync();
-            
-            if (result is null) continue;
-            var newId = (long)result;
-            
-            logger.Debug($"Arrangement with id {newId} created.");
-            
-            var newCommand =  Connection.CreateCommand();
-            newCommand.CommandText = "SELECT * FROM `arrangement` WHERE id=@id";
-            newCommand.Parameters.AddWithValue("@id", newId);
-
-            var reader = await newCommand.ExecuteReaderAsync();
-            while (reader.Read())
+            long newId = 0;
+            try
             {
-                createdArrangements.Add(new ArrangementEntity
-                {
-                    Id = reader.GetInt32(0),
-                    Name = reader.GetString(1),
-                    BasePrice = reader.GetInt64(2),
-                    Type = reader.GetString(3).MapToEnum<ArrangementType>(),
-                    CreatedAt = DateTime.Parse(reader.GetString(4)),
-                    UpdatedAt = reader.IsDBNull(5) ? default : DateTime.Parse(reader.GetString(5))
-                });
+                var command = data.Connection.CreateCommand();
+                command.CommandText = QueryConstants.Insert
+                    .Replace("{table}", "`arrangement`")
+                    .Replace("{columns}", string.Join(",", columns))
+                    .Replace("{values}", string.Join(",", values));
+
+                command.Parameters.AddWithValue("@name", arrangement.Name);
+                command.Parameters.AddWithValue("@basePrice", arrangement.BasePrice);
+                command.Parameters.AddWithValue("@type", arrangement.Type.ToString());
+
+                var result = await command.ExecuteScalarAsync();
+
+                if (result is null)
+                    continue;
+                newId = (long)result;
+
+                logger.Debug("Arrangement with id {id} created.", newId);
             }
+            catch (SqliteException e)
+            {
+                logger.Error(e, "Error creating arrangement with id {Id}", arrangement.Id);
+                continue;
+            }
+            ids.Add(newId);
         }
 
-        return createdArrangements;
+        return await GetItemsAsync(ids.Select(id => (int)id));
     }
 
     public async Task<IEnumerable<ArrangementEntity>> Update(IEnumerable<ArrangementEntity> arrangements)
     {
-        if (Connection == null)
+        if (data.Connection == null)
         {
             logger.Error("Database connection is null.");
-            return null;
+            return [];
         }
-        
-        var query = @"UPDATE arrangement
-                      SET name = @name, base_price = @basePrice, type = @type, updated_at = @updatedAt
-                      WHERE id = @id;";
 
-        List<ArrangementEntity> updatedArrangements = [];
-
+        var ids = new List<long>();
         foreach (var arrangement in arrangements.AsEnumerable())
         {
-            var command = Connection.CreateCommand();
-            command.CommandText = query;
-            
-            command.Parameters.AddWithValue("@id", arrangement.Id);
-            command.Parameters.AddWithValue("@name", arrangement.Name);
-            command.Parameters.AddWithValue("@basePrice", arrangement.BasePrice);
-            command.Parameters.AddWithValue("@type", arrangement.Type.ToString());
-            command.Parameters.AddWithValue("@updatedAt", DateTime.Now);
-
-            await command.ExecuteNonQueryAsync();
-
-            logger.Debug($"Arrangement with id {arrangement.Id} updated.");
-
-            var newCommand = Connection.CreateCommand();
-            newCommand.CommandText = "SELECT * FROM `arrangement` WHERE id=@id";
-            newCommand.Parameters.AddWithValue("@id", arrangement.Id);
-
-            var reader = await newCommand.ExecuteReaderAsync();
-            while (reader.Read())
+            try
             {
-                updatedArrangements.Add(new ArrangementEntity
-                {
-                    Id = reader.GetInt32(0),
-                    Name = reader.GetString(1),
-                    BasePrice = reader.GetInt64(2),
-                    Type = reader.GetString(3).MapToEnum<ArrangementType>(),
-                    CreatedAt = DateTime.Parse(reader.GetString(4)),
-                    UpdatedAt = reader.IsDBNull(5) ? default : DateTime.Parse(reader.GetString(5))
-                });
+                var command = data.Connection.CreateCommand();
+                command.CommandText = QueryConstants.Update
+                    .Replace("{table}", "`arrangement`")
+                    .Replace("{columns}", string.Join(",", ["name = @name", "base_price = @basePrice", "type = @type"]));
+
+                command.Parameters.AddWithValue("@id", arrangement.Id);
+                command.Parameters.AddWithValue("@name", arrangement.Name);
+                command.Parameters.AddWithValue("@basePrice", arrangement.BasePrice);
+                command.Parameters.AddWithValue("@type", arrangement.Type.ToString());
+
+                var result = await command.ExecuteScalarAsync();
+
+                if (result is null)
+                    continue;
+                var updated = (long)result;
+
+                logger.Debug("Arrangement with id {Id} updated.", updated);
             }
+            catch (SqliteException e)
+            {
+                logger.Error(e, "Error updating arrangement with id {Id}", arrangement.Id);
+                continue;
+            }
+            ids.Add(arrangement.Id);
         }
 
-        return updatedArrangements;
+        return await GetItemsAsync(ids.Select(id => (int)id));
     }
 
-    public async Task Delete(IEnumerable<ArrangementEntity> arrangements)
+    public async Task<int> Delete(IEnumerable<ArrangementEntity> arrangements)
     {
-        if (Connection == null)
+        if (data.Connection == null)
         {
             logger.Error("Database connection is null.");
-            return;
+            return 0;
         }
-        
-        var query = "DELETE FROM arrangement WHERE id = @id";
 
+        var deleted = 0;
         foreach (var arrangement in arrangements.AsEnumerable())
         {
-            var command = Connection.CreateCommand();
-            command.CommandText = query;
-            
-            command.Parameters.AddWithValue("@id", arrangement.Id);
-            await command.ExecuteNonQueryAsync();
-            
-            logger.Debug($"Arrangement with id {arrangement.Id} deleted.");
+            try
+            {
+                var command = data.Connection.CreateCommand();
+                command.CommandText = QueryConstants.Delete
+                    .Replace("{table}", "`arrangement`");
+
+                command.Parameters.AddWithValue("@id", arrangement.Id);
+                await command.ExecuteNonQueryAsync();
+
+                logger.Debug("Arrangement with id {Id} deleted.", arrangement.Id);
+            }
+            catch (SqliteException e)
+            {
+                logger.Error(e, "Error deleting arrangement with id {Id}", arrangement.Id);
+                continue;
+            }
+            deleted++;
         }
+
+        return deleted;
     }
 }

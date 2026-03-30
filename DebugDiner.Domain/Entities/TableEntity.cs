@@ -8,14 +8,14 @@ public class TableEntity : BaseEntity
         if (obj is not TableEntity entity) return false;
         if (ReferenceEquals(this, obj)) return true;
         if (ReferenceEquals(null, obj)) return false;
-        
+
         if (!base.Equals(obj)) return false;
         if (Capacity != entity.Capacity) return false;
         if (Type != entity.Type) return false;
-        
+
         return true;
     }
-    
+
     public override int GetHashCode()
     {
         var hashCode = new HashCode();

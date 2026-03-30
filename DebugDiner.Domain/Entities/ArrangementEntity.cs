@@ -8,13 +8,13 @@ public class ArrangementEntity : BaseEntity
         if (obj is not ArrangementEntity entity) return false;
         if (ReferenceEquals(this, obj)) return true;
         if (ReferenceEquals(null, obj)) return false;
-        
+
         if (!base.Equals(obj)) return false;
-        
+
         if (Name != entity.Name) return false;
         if (BasePrice != entity.BasePrice) return false;
         if (Type != entity.Type) return false;
-        
+
         return true;
     }
 

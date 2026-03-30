@@ -12,3 +12,11 @@ CREATE TABLE `arrangement`
 
 INSERT INTO `arrangement` (`name`, `base_price`, `type`, `created_at`, `updated_at`)
 VALUES ('Classic Dinner', '29.99', 'TwoCourse', DATETIME('now'), DATETIME('now'));
+
+DROP TRIGGER IF EXISTS trg_arrangement_updated_at;
+CREATE TRIGGER trg_arrangement_updated_at
+AFTER UPDATE ON `arrangement`
+FOR EACH ROW
+BEGIN
+    UPDATE `arrangement` SET updated_at = DATETIME('now') WHERE id = NEW.id;
+END;

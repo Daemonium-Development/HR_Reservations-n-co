@@ -14,14 +14,15 @@ public static class ServiceExtensions
         {
             services.AddOptions<DatabaseOptions>()
                 .BindConfiguration(DatabaseOptions.SectionName);
-            
+
             services.AddSingleton<IDataService, DataService>();
-            
+
+            services.AddSingleton<IArrangementRepository, ArrangementRepository>();
             services.AddSingleton<IMenuRepository, MenuRepository>();
             services.AddSingleton<IReservationRepository, ReservationRepository>();
             services.AddSingleton<ITableRepository, TableRepository>();
             services.AddSingleton<IUserRepository, UserRepository>();
-            
+
             return services;
         }
     }
