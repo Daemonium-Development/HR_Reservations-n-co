@@ -57,6 +57,9 @@ internal static class Program
         var db = app.Services.GetRequiredService<IDataService>();
         await db.StartAsync();
 
+        // TEST Spectre.Console UI
+        var layout = new LayoutView();
+
         return 0;
     }
 }
