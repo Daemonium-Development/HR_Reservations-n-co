@@ -40,7 +40,7 @@ public class TableRepository(ILogger logger) : ITableRepository
             return null;
         }
 
-        var query = "SELECT id, capacity, table_type FROM `table` WHERE id=@id";
+        var query = "SELECT * FROM `table` WHERE id=@id";
         var command = Connection.CreateCommand();
         command.CommandText = query;
         command.Parameters.AddWithValue("@id", id);
@@ -73,7 +73,7 @@ public class TableRepository(ILogger logger) : ITableRepository
             return [];
         }
 
-        var query = "SELECT id, capacity, table_type FROM `table`";
+        var query = "SELECT * FROM `table`";
         var command = Connection.CreateCommand();
         command.CommandText = query;
 
@@ -105,38 +105,19 @@ public class TableRepository(ILogger logger) : ITableRepository
             logger.Error("Database connection is null.");
             return [];
         }
-
+        
         var createdTables = new List<TableEntity>();
-
+        var query = "INSERT INTO `table` (capacity, type, updated_at) VALUES (@capacity, @type, @updatedAt);";
         foreach (var table in tables)
         {
-            var query = "INSERT INTO `table` (capacity, table_type) VALUES (@capacity, @type);";
             var command = Connection.CreateCommand();
             command.CommandText = query;
             command.Parameters.AddWithValue("@capacity", table.Capacity);
             command.Parameters.AddWithValue("@type", table.Type.ToString());
+            command.Parameters.AddWithValue("@updatedAt", DateTime.Now);
 
-            var tableId = Convert.ToInt32(await command.ExecuteScalarAsync());
-
-            query = "SELECT id, capacity, table_type FROM table WHERE id=@id";
-            command = Connection.CreateCommand();
-            command.CommandText = query;
-            command.Parameters.AddWithValue("@id", tableId);
-
-            var reader = await command.ExecuteReaderAsync();
-            if (reader.Read())
-            {
-                createdTables.Add(new TableEntity
-                {
-                    Id = reader.GetInt32(0),
-                    Capacity = reader.GetInt32(1),
-                    Type = reader.GetString(2).MapToEnum<TableType>(),
-                    CreatedAt = reader.GetDateTime(3),
-                    UpdatedAt = reader.GetDateTime(4)
-                });
-            }
-
-            await reader.CloseAsync();
+            await command.ExecuteScalarAsync();
+            createdTables.Add(table);
         }
 
         logger.Debug("create {Count} table(s).", createdTables.Count);
@@ -151,17 +132,15 @@ public class TableRepository(ILogger logger) : ITableRepository
             return [];
         }
         
-        var query = @"INSERT OR REPLACE INTO table
-                          SET capacity=@capacity, table_type=@type
-                          WHERE id=@id";
+        var query = @"INSERT OR REPLACE INTO `table` (capacity, `type`, updated_at) VALUES (@capaity, @type, @updated_at) WHERE id=@id";
         foreach (var table in tables.AsEnumerable())
         {
             var command = Connection.CreateCommand();
             command.CommandText = query;
-
-            command.Parameters.AddWithValue("@id", table.Id);
+            
             command.Parameters.AddWithValue("@capacity", table.Capacity);
             command.Parameters.AddWithValue("@type", table.Type.ToString());
+            command.Parameters.AddWithValue("@updated_at", DateTime.Now);
 
             await command.ExecuteNonQueryAsync();
         }
@@ -170,24 +149,35 @@ public class TableRepository(ILogger logger) : ITableRepository
         return tables;
     }
 
-    public async Task Delete(IEnumerable<TableEntity> tables)
+    public async Task<int> Delete(IEnumerable<TableEntity> tables)
     {
         if (Connection == null)
         {
             logger.Error("Database connection is null");
-            return;
+            return 0;
         }
 
+        var query = "DELETE FROM `table` WHERE id=@id";
+        var deleted = 0;
         foreach (var table in tables)
         {
-            var query = "DELETE FROM table WHERE id=@id";
-            var command = Connection.CreateCommand();
-            command.CommandText = query;
-            command.Parameters.AddWithValue("@id", table.Id);
+            try
+            {
+                var command = Connection.CreateCommand();
+                command.CommandText = query;
+                command.Parameters.AddWithValue("@id", table.Id);
 
-            await command.ExecuteNonQueryAsync();
+                await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+            }
+            catch (SqliteException e)
+            {
+                logger.Error(e, "Error deleting table with id {Id}", table.Id);
+                continue;
+            }
+            deleted++;
         }
 
-        logger.Information("deleted {Count} table(s)", tables.Count());
+        logger.Information("deleted {Count} table(s)", deleted);
+        return deleted;
     }
 }

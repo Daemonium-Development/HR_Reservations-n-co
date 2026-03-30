@@ -9,5 +9,4 @@ CREATE TABLE `reservation_arrangement`
     FOREIGN KEY (`arrangement_id`) REFERENCES `arrangement`(`id`)
 );
 
-INSERT INTO `reservation_arrangement` (`arrangement_id`, `reservation_id`)
-VALUES (1, 1);
+INSERT INTO `reservation_arrangement` (`arrangement_id`, `reservation_id`) VALUES (1, 1);

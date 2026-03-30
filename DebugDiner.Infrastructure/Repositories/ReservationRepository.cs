@@ -53,12 +53,12 @@ public class ReservationRepository(ILogger logger) : IReservationRepository
                 Id = reader.GetInt32(0),
                 UserId = reader.GetInt32(1),
                 TableId = reader.GetInt32(2),
-                StartTime = DateTime.Parse(reader.GetString(3)),
-                EndTime = DateTime.Parse(reader.GetString(4)),
+                StartTime = reader.GetDateTime(3),
+                EndTime = reader.GetDateTime(4),
                 Guests = reader.GetInt32(5),
                 Status = reader.GetString(6).MapToEnum<ReservationStatus>(),
-                CreatedAt = DateTime.Parse(reader.GetString(7)),
-                UpdatedAt = reader.IsDBNull(8) ? default : DateTime.Parse(reader.GetString(8))
+                CreatedAt = reader.GetDateTime(7),
+                UpdatedAt = reader.GetDateTime(8)
             };
         }
 
@@ -86,12 +86,12 @@ public class ReservationRepository(ILogger logger) : IReservationRepository
                 Id = reader.GetInt32(0),
                 UserId = reader.GetInt32(1),
                 TableId = reader.GetInt32(2),
-                StartTime = DateTime.Parse(reader.GetString(3)),
-                EndTime = DateTime.Parse(reader.GetString(4)),
+                StartTime = reader.GetDateTime(3),
+                EndTime = reader.GetDateTime(4),
                 Guests = reader.GetInt32(5),
                 Status = reader.GetString(6).MapToEnum<ReservationStatus>(),
-                CreatedAt = DateTime.Parse(reader.GetString(7)),
-                UpdatedAt = reader.IsDBNull(8) ? default : DateTime.Parse(reader.GetString(8))
+                CreatedAt = reader.GetDateTime(7),
+                UpdatedAt = reader.GetDateTime(8)
             });
         }
 
@@ -107,12 +107,9 @@ public class ReservationRepository(ILogger logger) : IReservationRepository
             return [];
         }
         
-        var query = @"INSERT INTO reservation (user_id, table_id, start_time, end_time, guests, status)
-                                VALUES (@userId, @tableId, @startTime, @endTime, @guests, @status);
-                                SELECT last_insert_rowid();";
+        var query = @"INSERT INTO reservation (user_id, table_id, start_time, end_time, guests, status, created_at, updated_at) VALUES (@userId, @tableId, @startTime, @endTime, @guests, @status, @createdAt, @updatedAt) RETURNING id";
 
-        List<ReservationEntity> createdReservations = [];
-
+        var ids = new List<long>();
         foreach (var reservation in reservations.AsEnumerable())
         {
             var command = Connection.CreateCommand();
@@ -124,35 +121,16 @@ public class ReservationRepository(ILogger logger) : IReservationRepository
             command.Parameters.AddWithValue("@startTime", reservation.StartTime);
             command.Parameters.AddWithValue("@guests", reservation.Guests);
             command.Parameters.AddWithValue("@status", reservation.Status.ToString());
+            command.Parameters.AddWithValue("@createdAt", DateTime.Now);
+            command.Parameters.AddWithValue("@updatedAt", DateTime.Now);
             
             var result = await command.ExecuteScalarAsync();
-            var newId = (long)result;
+            var createdId = (long)result;
             
-            logger.Debug($"Reservation with id {newId} created.");
-            
-            var newCommand =  Connection.CreateCommand();
-            newCommand.CommandText = "SELECT * FROM `reservation` WHERE id=@id";
-            newCommand.Parameters.AddWithValue("@id", newId);
-
-            var reader = await newCommand.ExecuteReaderAsync();
-            while (reader.Read())
-            {
-                createdReservations.Add(new ReservationEntity
-                {
-                    Id = reader.GetInt32(0),
-                    UserId = reader.GetInt32(1),
-                    TableId = reader.GetInt32(2),
-                    StartTime = DateTime.Parse(reader.GetString(3)),
-                    EndTime = DateTime.Parse(reader.GetString(4)),
-                    Guests = reader.GetInt32(5),
-                    Status = reader.GetString(6).MapToEnum<ReservationStatus>(),
-                    CreatedAt = DateTime.Parse(reader.GetString(7)),
-                    UpdatedAt = reader.IsDBNull(8) ? default : DateTime.Parse(reader.GetString(8))
-                });
-            }
+            logger.Debug("Reservation with id {newId} created.", createdId);
+            if (createdId > 0) { ids.Add(createdId);}
         }
-
-        return createdReservations;
+        return await GetItemsAsync(ids.Select(id => (int)id));
     }
 
     public async Task<IEnumerable<ReservationEntity>> Update(IEnumerable<ReservationEntity> reservations)
@@ -163,13 +141,12 @@ public class ReservationRepository(ILogger logger) : IReservationRepository
             return null;
         }
         
-        var query = @"UPDATE reservation
-                      SET user_id = @userId, table_id = @tableId, start_time = @startTime, end_time = @endTime,
-                          guests = @guests, status = @status, updated_at = @updatedAt
-                      WHERE id = @id;";
+        var query = @"INSERT OR REPLACE INTO `reservation`
+                        (id, user_id, table_id, start_time, end_time, guests, status, updated_at)
+                        VALUES (@id, @userId, @tableId, @startTime, @endTime, @guests, @status, @updatedAt)
+                        WHERE id = @id RETURNING id;";
 
-        List<ReservationEntity> updatedReservations = [];
-
+        var ids = new List<long>();
         foreach (var reservation in reservations.AsEnumerable())
         {
             var command = Connection.CreateCommand();
@@ -184,54 +161,45 @@ public class ReservationRepository(ILogger logger) : IReservationRepository
             command.Parameters.AddWithValue("@status", reservation.Status.ToString());
             command.Parameters.AddWithValue("@updatedAt", DateTime.Now);
 
-            await command.ExecuteNonQueryAsync();
+            var result = await command.ExecuteScalarAsync();
+            var updatedId = (long)result;
 
-            logger.Debug($"Reservation with id {reservation.Id} updated.");
-
-            var newCommand = Connection.CreateCommand();
-            newCommand.CommandText = "SELECT * FROM `reservation` WHERE id=@id";
-            newCommand.Parameters.AddWithValue("@id", reservation.Id);
-
-            var reader = await newCommand.ExecuteReaderAsync();
-            while (reader.Read())
-            {
-                updatedReservations.Add(new ReservationEntity
-                {
-                    Id = reader.GetInt32(0),
-                    UserId = reader.GetInt32(1),
-                    TableId = reader.GetInt32(2),
-                    StartTime = DateTime.Parse(reader.GetString(3)),
-                    EndTime = DateTime.Parse(reader.GetString(4)),
-                    Guests = reader.GetInt32(5),
-                    Status = reader.GetString(6).MapToEnum<ReservationStatus>(),
-                    CreatedAt = DateTime.Parse(reader.GetString(7)),
-                    UpdatedAt = reader.IsDBNull(8) ? default : DateTime.Parse(reader.GetString(8))
-                });
-            }
+            logger.Debug("Reservation with id {id} updated.", updatedId);
+            if (updatedId > 0) { ids.Add(updatedId);}
         }
 
-        return updatedReservations;
+        return await GetItemsAsync(ids.Select(id => (int)id));
     }
 
-    public async Task Delete(IEnumerable<ReservationEntity> reservations)
+    public async Task<int> Delete(IEnumerable<ReservationEntity> reservations)
     {
         if (Connection == null)
         {
             logger.Error("Database connection is null.");
-            return;
+            return 0;
         }
         
         var query = "DELETE FROM reservation WHERE id = @id";
 
+        var deleted = 0;
         foreach (var reservation in reservations.AsEnumerable())
         {
-            var command = Connection.CreateCommand();
-            command.CommandText = query;
-            
-            command.Parameters.AddWithValue("@id", reservation.Id);
-            await command.ExecuteNonQueryAsync();
-            
-            logger.Debug($"Reservation with id {reservation.Id} deleted.");
+            try
+            {
+                var command = Connection.CreateCommand();
+                command.CommandText = query;
+                command.Parameters.AddWithValue("@id", reservation.Id);
+                await command.ExecuteNonQueryAsync();
+                logger.Debug($"Reservation with id {reservation.Id} deleted.");
+            }
+            catch (SqliteException e)
+            {
+                logger.Error(e, $"Failed to delete reservation with id {reservation.Id}");
+                continue;
+            }
+            deleted++;
         }
+        
+        return deleted;
     }
 }

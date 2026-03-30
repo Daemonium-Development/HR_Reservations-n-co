@@ -52,8 +52,8 @@ public class MenuRepository(ILogger logger) : IMenuRepository
             {
                 Id = reader.GetInt32(0),
                 Name = reader.GetString(1),
-                Description = reader.GetString(2),
-                Price = reader.GetDecimal(3),
+                Price = reader.GetDecimal(2),
+                Description = reader.GetString(3),
                 DishCategory = reader.GetString(4).MapToEnum<DishCategory>(),
                 AllergenInfo = reader.GetString(5),
                 CreatedAt = reader.GetDateTime(6),
@@ -84,8 +84,8 @@ public class MenuRepository(ILogger logger) : IMenuRepository
             {
                 Id = reader.GetInt32(0),
                 Name = reader.GetString(1),
-                Description = reader.GetString(2),
-                Price = reader.GetDecimal(3),
+                Price = reader.GetDecimal(2),
+                Description = reader.GetString(3),
                 DishCategory = reader.GetString(4).MapToEnum<DishCategory>(),
                 AllergenInfo = reader.GetString(5),
                 CreatedAt = reader.GetDateTime(6),
@@ -106,7 +106,7 @@ public class MenuRepository(ILogger logger) : IMenuRepository
         }
         
         var query = @"INSERT INTO `dish` (name, description, price, category, allergen_info, updated_at) 
-                    VALUES (@name, @description, @price, @category, @allergen_info, @updatedAt)";
+                    VALUES (@name, @description, @price, @category, @allergen_info, @updatedAt) RETURNING id;";
 
         foreach (var dish in dishes.AsEnumerable())
         {
@@ -117,6 +117,7 @@ public class MenuRepository(ILogger logger) : IMenuRepository
             command.Parameters.AddWithValue("@price", dish.Price);
             command.Parameters.AddWithValue("@category", dish.DishCategory.ToString());
             command.Parameters.AddWithValue("@allergen_info", dish.AllergenInfo);
+            command.Parameters.AddWithValue("@createdAt", dish.CreatedAt);
             command.Parameters.AddWithValue("@updatedAt", DateTime.Now);
             await command.ExecuteNonQueryAsync().ConfigureAwait(false);
         }
@@ -134,8 +135,9 @@ public class MenuRepository(ILogger logger) : IMenuRepository
         }
         
         var query = @"INSERT OR REPLACE INTO `dish` (name, description, price, category, allergen_info, updated_at) 
-                    VALUES (@name, @description, @price, @category, @allergen_info, @updatedAt)";
+                    VALUES (@name, @description, @price, @category, @allergen_info, @updatedAt) RETURNING id;";
 
+        var ids = new List<long>();
         foreach (var dish in dishes.AsEnumerable())
         {
             var command = Connection.CreateCommand();
@@ -146,29 +148,44 @@ public class MenuRepository(ILogger logger) : IMenuRepository
             command.Parameters.AddWithValue("@category", dish.DishCategory.ToString());
             command.Parameters.AddWithValue("@allergen_info", dish.AllergenInfo);
             command.Parameters.AddWithValue("@updatedAt", DateTime.Now);
-            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+            var result = await command.ExecuteScalarAsync().ConfigureAwait(false);
+            var updatedId = (long)result;
+            
+            logger.Debug("Dish with id {id} updated.", updatedId);
+            if (updatedId > 0) { ids.Add(updatedId);}
         }
 
         logger.Information("Created {0} rows from database.", dishes.Count());
-        return dishes;
+        return await GetItemsAsync(ids.Select(id => (int)id));
     }
 
-    public async Task Delete(IEnumerable<DishEntity> dishes)
+    public async Task<int> Delete(IEnumerable<DishEntity> dishes)
     {
         if (Connection == null)
         {
             logger.Error("Database connection is null.");
-            return;
+            return 0;
         }
 
+        var deleted = 0;
         foreach (var dish in dishes.AsEnumerable())
         {
-            var command = Connection.CreateCommand();
-            command.CommandText = "DELETE FROM `dish` WHERE id=@id";
-            command.Parameters.AddWithValue("@id", dish.Id);
-            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+            try
+            {
+                var command = Connection.CreateCommand();
+                command.CommandText = "DELETE FROM `dish` WHERE id=@id";
+                command.Parameters.AddWithValue("@id", dish.Id);
+                await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                logger.Error(e, "Error deleting dish with id {Id}", dish.Id);
+                continue;
+            }
+            deleted++;
         }
         
         logger.Information("Deleted {0} rows from database.", dishes.Count());
+        return deleted;
     }
 }

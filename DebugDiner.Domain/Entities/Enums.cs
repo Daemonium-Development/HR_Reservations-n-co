@@ -16,6 +16,7 @@ public enum DishCategory
 
 public enum Role
 {
+    Admin,
     Customer,
     Employee,
     Manager
