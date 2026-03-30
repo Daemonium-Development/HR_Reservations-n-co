@@ -6,7 +6,7 @@ public class BaseRepository
 {
     protected SqliteConnection? Connection { get; private set; }
     
-    protected void SetConnection(SqliteConnection connection)
+    public void SetConnection(SqliteConnection connection)
     {
         Connection = connection;
     }

@@ -10,5 +10,5 @@ CREATE TABLE `arrangement`
     `updated_at` TEXT NULL
 );
 
-INSERT INTO `arrangement` (`name`, `base_price`, `type`, `created_at`, `updated_at`)
+INSERT INTO `arrangement` (`name`, `base_price`, `type`)
 VALUES ('Classic Dinner', '29.99', 'TwoCourse');
