@@ -1,11 +1,14 @@
 ﻿using DebugDiner.Domain.Abstractions;
-
+using DebugDiner.Domain.Utilities;
+using Microsoft.Data.Sqlite;
 using Serilog;
 
 namespace DebugDiner.Infrastructure.Repositories;
 
-public class ReservationRepository(ILogger logger) : BaseRepository, IReservationRepository
+public class ReservationRepository(ILogger logger) : IReservationRepository
 {
+    public SqliteConnection? Connection { get; set; }
+    
     public async Task<IEnumerable<ReservationEntity>> GetItemsAsync(IEnumerable<int>? ids = null)
     {
         if (Connection == null)
@@ -53,7 +56,7 @@ public class ReservationRepository(ILogger logger) : BaseRepository, IReservatio
                 StartTime = DateTime.Parse(reader.GetString(3)),
                 EndTime = DateTime.Parse(reader.GetString(4)),
                 Guests = reader.GetInt32(5),
-                Status = MapToEnum<ReservationStatus>(reader.GetString(6)),
+                Status = reader.GetString(6).MapToEnum<ReservationStatus>(),
                 CreatedAt = DateTime.Parse(reader.GetString(7)),
                 UpdatedAt = reader.IsDBNull(8) ? default : DateTime.Parse(reader.GetString(8))
             };
@@ -86,7 +89,7 @@ public class ReservationRepository(ILogger logger) : BaseRepository, IReservatio
                 StartTime = DateTime.Parse(reader.GetString(3)),
                 EndTime = DateTime.Parse(reader.GetString(4)),
                 Guests = reader.GetInt32(5),
-                Status = MapToEnum<ReservationStatus>(reader.GetString(6)),
+                Status = reader.GetString(6).MapToEnum<ReservationStatus>(),
                 CreatedAt = DateTime.Parse(reader.GetString(7)),
                 UpdatedAt = reader.IsDBNull(8) ? default : DateTime.Parse(reader.GetString(8))
             });
@@ -142,7 +145,7 @@ public class ReservationRepository(ILogger logger) : BaseRepository, IReservatio
                     StartTime = DateTime.Parse(reader.GetString(3)),
                     EndTime = DateTime.Parse(reader.GetString(4)),
                     Guests = reader.GetInt32(5),
-                    Status = MapToEnum<ReservationStatus>(reader.GetString(6)),
+                    Status = reader.GetString(6).MapToEnum<ReservationStatus>(),
                     CreatedAt = DateTime.Parse(reader.GetString(7)),
                     UpdatedAt = reader.IsDBNull(8) ? default : DateTime.Parse(reader.GetString(8))
                 });
@@ -200,7 +203,7 @@ public class ReservationRepository(ILogger logger) : BaseRepository, IReservatio
                     StartTime = DateTime.Parse(reader.GetString(3)),
                     EndTime = DateTime.Parse(reader.GetString(4)),
                     Guests = reader.GetInt32(5),
-                    Status = MapToEnum<ReservationStatus>(reader.GetString(6)),
+                    Status = reader.GetString(6).MapToEnum<ReservationStatus>(),
                     CreatedAt = DateTime.Parse(reader.GetString(7)),
                     UpdatedAt = reader.IsDBNull(8) ? default : DateTime.Parse(reader.GetString(8))
                 });

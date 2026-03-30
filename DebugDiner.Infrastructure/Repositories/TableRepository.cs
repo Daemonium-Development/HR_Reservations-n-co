@@ -1,10 +1,14 @@
 using DebugDiner.Domain.Abstractions;
+using DebugDiner.Domain.Utilities;
+using Microsoft.Data.Sqlite;
 using Serilog;
 
 namespace DebugDiner.Infrastructure.Repositories;
 
-public class TableRepository(ILogger logger) : BaseRepository, ITableRepository
+public class TableRepository(ILogger logger) : ITableRepository
 {
+    public SqliteConnection? Connection { get; set; }
+    
     public async Task<IEnumerable<TableEntity>> GetItemsAsync(IEnumerable<int>? ids = null)
     {
         if (Connection == null)
@@ -50,7 +54,7 @@ public class TableRepository(ILogger logger) : BaseRepository, ITableRepository
             {
                 Id = reader.GetInt32(0),
                 Capacity = reader.GetInt32(1),
-                Type = MapToEnum<TableType>(reader.GetString(2)),
+                Type = reader.GetString(2).MapToEnum<TableType>(),
                 CreatedAt = reader.GetDateTime(3),
                 UpdatedAt = reader.GetDateTime(4)
             };
@@ -82,7 +86,7 @@ public class TableRepository(ILogger logger) : BaseRepository, ITableRepository
             {
                 Id = reader.GetInt32(0),
                 Capacity = reader.GetInt32(1),
-                Type = MapToEnum<TableType>(reader.GetString(2)),
+                Type = reader.GetString(2).MapToEnum<TableType>(),
                 CreatedAt = reader.GetDateTime(3),
                 UpdatedAt = reader.GetDateTime(4)
             });
@@ -126,7 +130,7 @@ public class TableRepository(ILogger logger) : BaseRepository, ITableRepository
                 {
                     Id = reader.GetInt32(0),
                     Capacity = reader.GetInt32(1),
-                    Type = MapToEnum<TableType>(reader.GetString(2)),
+                    Type = reader.GetString(2).MapToEnum<TableType>(),
                     CreatedAt = reader.GetDateTime(3),
                     UpdatedAt = reader.GetDateTime(4)
                 });

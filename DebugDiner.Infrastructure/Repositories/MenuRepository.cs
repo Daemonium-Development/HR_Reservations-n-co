@@ -1,10 +1,14 @@
 using DebugDiner.Domain.Abstractions;
+using DebugDiner.Domain.Utilities;
+using Microsoft.Data.Sqlite;
 using Serilog;
 
 namespace DebugDiner.Infrastructure.Repositories;
 
-public class MenuRepository(ILogger logger) : BaseRepository, IMenuRepository
+public class MenuRepository(ILogger logger) : IMenuRepository
 {
+    public SqliteConnection? Connection { get; set; }
+    
     public async Task<IEnumerable<DishEntity>> GetItemsAsync(IEnumerable<int>? ids = null)
     {
         if (Connection == null)
@@ -50,7 +54,7 @@ public class MenuRepository(ILogger logger) : BaseRepository, IMenuRepository
                 Name = reader.GetString(1),
                 Description = reader.GetString(2),
                 Price = reader.GetDecimal(3),
-                DishCategory = Enum.Parse<DishCategory>(reader.GetString(4)),
+                DishCategory = reader.GetString(4).MapToEnum<DishCategory>(),
                 AllergenInfo = reader.GetString(5),
                 CreatedAt = reader.GetDateTime(6),
                 UpdatedAt = reader.GetDateTime(7),
@@ -82,7 +86,7 @@ public class MenuRepository(ILogger logger) : BaseRepository, IMenuRepository
                 Name = reader.GetString(1),
                 Description = reader.GetString(2),
                 Price = reader.GetDecimal(3),
-                DishCategory = Enum.Parse<DishCategory>(reader.GetString(4)),
+                DishCategory = reader.GetString(4).MapToEnum<DishCategory>(),
                 AllergenInfo = reader.GetString(5),
                 CreatedAt = reader.GetDateTime(6),
                 UpdatedAt = reader.GetDateTime(7),

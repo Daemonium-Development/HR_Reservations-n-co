@@ -1,7 +1,10 @@
-﻿namespace DebugDiner.Domain.Abstractions;
+﻿using Microsoft.Data.Sqlite;
+
+namespace DebugDiner.Domain.Abstractions;
 
 public interface IMenuRepository
 {
+    SqliteConnection? Connection { get; set; }
     Task<IEnumerable<DishEntity>> GetItemsAsync(IEnumerable<int>? ids = null);
     Task<IEnumerable<DishEntity>> Create(IEnumerable<DishEntity> dishes);
     Task<IEnumerable<DishEntity>> Update(IEnumerable<DishEntity> dishes);

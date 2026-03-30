@@ -55,8 +55,17 @@ internal static class Program
         var app = builder.Build();
         
         var db = app.Services.GetRequiredService<IDataService>();
-        await db.StartAsync();
+        var menuRepository = app.Services.GetRequiredService<IMenuRepository>();
+        var tableRepository = app.Services.GetRequiredService<ITableRepository>();
+        var userRepository = app.Services.GetRequiredService<IUserRepository>();
+        var reservationRepository = app.Services.GetRequiredService<IReservationRepository>();
         
+        var connection = await db.StartAsync();
+
+        menuRepository.Connection = connection;
+        tableRepository.Connection = connection;
+        userRepository.Connection = connection;
+        reservationRepository.Connection = connection;
         
         return 0;
     }

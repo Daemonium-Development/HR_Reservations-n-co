@@ -1,5 +1,6 @@
 ﻿using DebugDiner.Domain.Abstractions;
-
+using DebugDiner.Domain.Utilities;
+using Microsoft.Data.Sqlite;
 using Serilog;
 
 namespace DebugDiner.Infrastructure.Repositories;
@@ -12,8 +13,10 @@ namespace DebugDiner.Infrastructure.Repositories;
 /// Any of these methods should be placed in a `try / catch` block to handle any exceptions that may occur.
 /// </summary>
 /// <param name="logger"></param>
-public class UserRepository(ILogger logger) : BaseRepository, IUserRepository
+public class UserRepository(ILogger logger) : IUserRepository
 {
+    public SqliteConnection? Connection { get; set; }
+    
     public async Task<IEnumerable<UserEntity>> GetItemsAsync(IEnumerable<int>? ids = null)
     {
         if (Connection == null)
@@ -59,7 +62,7 @@ public class UserRepository(ILogger logger) : BaseRepository, IUserRepository
                 Name = reader.GetString(1),
                 Email = reader.GetString(2),
                 PasswordHash = reader.GetString(3),
-                Role = MapToEnum<Role>(reader.GetString(4)),
+                Role = reader.GetString(4).MapToEnum<Role>(),
                 CreatedAt = reader.GetDateTime(5),
                 UpdatedAt = reader.GetDateTime(6)
             };
@@ -90,7 +93,7 @@ public class UserRepository(ILogger logger) : BaseRepository, IUserRepository
                 Name = reader.GetString(1),
                 Email = reader.GetString(2),
                 PasswordHash = reader.GetString(3),
-                Role = MapToEnum<Role>(reader.GetString(4)),
+                Role = reader.GetString(4).MapToEnum<Role>(),
                 CreatedAt = reader.GetDateTime(5),
                 UpdatedAt = reader.GetDateTime(6)
             });
