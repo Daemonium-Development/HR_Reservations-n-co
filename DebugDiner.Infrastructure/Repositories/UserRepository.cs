@@ -42,12 +42,6 @@ public class UserRepository(ILogger logger) : IUserRepository
     
     private async Task<UserEntity?> GetById(int id)
     {
-        if (Connection == null)
-        {
-            logger.Error("Database connection is null.");
-            return null;
-        }
-
         var command = Connection.CreateCommand();
         command.CommandText = "SELECT * FROM `user` WHERE id=@id"; 
         command.Parameters.AddWithValue("@id", id);
@@ -74,12 +68,6 @@ public class UserRepository(ILogger logger) : IUserRepository
 
     private async Task<IEnumerable<UserEntity>> GetAll()
     {
-        if (Connection == null)
-        {
-            logger.Error("Database connection is null.");
-            return [  ];
-        }
-
         var command = Connection.CreateCommand();
         command.CommandText = "SELECT * FROM `user`";
 
@@ -156,23 +144,35 @@ public class UserRepository(ILogger logger) : IUserRepository
         return users;
     }
     
-    public async Task Delete(IEnumerable<UserEntity> users)
+    public async Task<int> Delete(IEnumerable<UserEntity> users)
     {
         if (Connection == null)
         {
             logger.Error("Database connection is null.");
-            return;
+            return 0;
         }
 
+        var deleted = 0;
         foreach (var user in users.AsEnumerable())
         {
-            var command = Connection.CreateCommand();
-            command.CommandText = "DELETE FROM `user` WHERE id=@id";
-            command.Parameters.AddWithValue("@id", user.Id);
-            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+            try
+            {
+                var command = Connection.CreateCommand();
+                command.CommandText = "DELETE FROM `user` WHERE id=@id";
+                command.Parameters.AddWithValue("@id", user.Id);
+                await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                logger.Error(e, "Errror deleting user with id {Id}", user.Id);
+                continue;
+            }
+
+            deleted++;
         }
         
         logger.Information("Deleted {0} rows from database.", users.Count());
+        return deleted;
     }
     
     // SUGGESTION:

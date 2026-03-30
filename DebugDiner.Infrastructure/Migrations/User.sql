@@ -11,5 +11,5 @@ CREATE TABLE `user`
     `updated_at`    TEXT NULL
 );
 
-INSERT INTO `user` (`name`, `email`, `password_hash`, `role`)
-VALUES ('Soufian Manai', 'graviaRotterdam@gmail.com', '$2a$12$examplehashhere', 'Admin');
+INSERT INTO `user` (`name`, `email`, `password_hash`, `role`, `created_at`, `updated_at`)
+VALUES ('Soufian Manai', 'graviaRotterdam@gmail.com', '$2a$12$examplehashhere', 'Admin', DATETIME('now'), DATETIME('now'));

@@ -38,6 +38,9 @@ public class DataService(IOptions<DatabaseOptions> options, ILogger logger) : ID
 
             await RunSchemaAsync().ConfigureAwait(false);
             _logger.Information("Database service started. Schema applied.");
+            
+            Status = ServiceStatus.Running;
+            return _connection;
         }
         catch (Exception ex)
         {
@@ -45,12 +48,6 @@ public class DataService(IOptions<DatabaseOptions> options, ILogger logger) : ID
             _logger.Error(ex, "Database service failed to start.");
             return null;
         }
-        finally
-        {
-            Status = ServiceStatus.Running;
-        }
-
-        return _connection;
     }
 
     public async Task StopAsync()
