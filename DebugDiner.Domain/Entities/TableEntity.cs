@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
 [Table("table")]
-class TableEntity : BaseEntity
+public class TableEntity : BaseEntity
 {
     [Column("capacity")]
     public required int Capacity { get; set; }

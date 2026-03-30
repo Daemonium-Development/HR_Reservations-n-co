@@ -1,13 +1,16 @@
-﻿using Microsoft.Data.Sqlite;
+﻿using DebugDiner.Domain.Abstractions;
+using Microsoft.Data.Sqlite;
 
 namespace DebugDiner.Infrastructure.Repositories;
 
-public class BaseRepository
+public class BaseRepository : IBaseRepository
 {
     protected SqliteConnection? Connection { get; private set; }
     
     public void SetConnection(SqliteConnection connection)
     {
+        if (Connection != null) throw new InvalidOperationException("Connection already set.");
+        
         Connection = connection;
     }
 
