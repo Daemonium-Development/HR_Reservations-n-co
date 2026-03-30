@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 
 [Table("reservation")]
 public class ReservationEntity : BaseEntity

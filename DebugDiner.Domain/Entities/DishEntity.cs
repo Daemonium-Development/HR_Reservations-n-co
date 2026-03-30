@@ -1,8 +1,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 
 [Table("dishes")]
-class DishEntity : BaseEntity
+public class DishEntity : BaseEntity
 {
     [Column("name")]
     public required string Name { get; set; }
