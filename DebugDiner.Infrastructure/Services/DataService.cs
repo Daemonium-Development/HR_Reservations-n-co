@@ -9,17 +9,16 @@ namespace DebugDiner.Infrastructure.Services;
 
 public class DataService(IOptions<DatabaseOptions> options, ILogger logger) : IDataService
 {
+    public SqliteConnection? Connection { get; private set; }
+
     private readonly DatabaseOptions _options = options.Value;
-    private readonly ILogger _logger = logger;
-    
-    private SqliteConnection? _connection;
     public ServiceStatus Status { get; private set; } = ServiceStatus.Stopped;
 
     public async Task<SqliteConnection?> StartAsync()
     {
         var dbPath = _options.ResolvedSource();
-        _logger.Information("Database service starting. Path={Path}", dbPath);
-        
+        logger.Information("Database service starting. Path={Path}", dbPath);
+
         try
         {
             if (!Directory.Exists(Path.GetDirectoryName(dbPath)!))
@@ -27,54 +26,54 @@ public class DataService(IOptions<DatabaseOptions> options, ILogger logger) : ID
                 Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
             }
 
-            _connection = new SqliteConnection($"Data Source={dbPath}");
-            await _connection.OpenAsync().ConfigureAwait(false);
+            Connection = new SqliteConnection($"Data Source={dbPath}");
+            await Connection.OpenAsync().ConfigureAwait(false);
 
-            await using (var pragma = _connection.CreateCommand())
+            await using (var pragma = Connection.CreateCommand())
             {
                 pragma.CommandText = "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;";
                 await pragma.ExecuteNonQueryAsync().ConfigureAwait(false);
             }
 
             await RunSchemaAsync().ConfigureAwait(false);
-            _logger.Information("Database service started. Schema applied.");
-            
+            logger.Information("Database service started. Schema applied.");
+
             Status = ServiceStatus.Running;
-            return _connection;
+            return Connection;
         }
         catch (Exception ex)
         {
             Status = ServiceStatus.Error;
-            _logger.Error(ex, "Database service failed to start.");
+            logger.Error(ex, "Database service failed to start.");
             return null;
         }
     }
 
     public async Task StopAsync()
     {
-        _logger.Information("Database service stopping.");
+        logger.Information("Database service stopping.");
         try
         {
-            if (_connection is not null)
+            if (Connection is not null)
             {
-                await _connection.CloseAsync().ConfigureAwait(false);
-                await _connection.DisposeAsync().ConfigureAwait(false);
-                _connection = null;
+                await Connection.CloseAsync().ConfigureAwait(false);
+                await Connection.DisposeAsync().ConfigureAwait(false);
+                Connection = null;
             }
 
             Status = ServiceStatus.Stopped;
-            _logger.Information("Database service stopped.");
+            logger.Information("Database service stopped.");
         }
         catch (Exception ex)
         {
             Status = ServiceStatus.Error;
-            _logger.Error(ex, "Database service failed to stop.");
+            logger.Error(ex, "Database service failed to stop.");
         }
     }
 
     public async Task<SqliteConnection?> RestartAsync()
     {
-        _logger.Information("Database service restarting.");
+        logger.Information("Database service restarting.");
         await StopAsync();
         return await StartAsync();
     }
@@ -86,13 +85,13 @@ public class DataService(IOptions<DatabaseOptions> options, ILogger logger) : ID
 
     public void Dispose()
     {
-        _connection?.Dispose();
+        Connection?.Dispose();
         GC.SuppressFinalize(this);
     }
 
     private async Task RunSchemaAsync()
     {
-        await using (var pragma = _connection!.CreateCommand())
+        await using (var pragma = Connection!.CreateCommand())
         {
             pragma.CommandText = "PRAGMA foreign_keys = OFF;";
             await pragma.ExecuteNonQueryAsync().ConfigureAwait(false);
@@ -103,7 +102,7 @@ public class DataService(IOptions<DatabaseOptions> options, ILogger logger) : ID
             string[] files = [
                 "User.sql",
                 "Arrangement.sql",
-                "Dish.sql",
+                "Menu.sql",
                 "Reservation.sql",
                 "Table.sql",
                 "ArrangementDish.sql",
@@ -112,14 +111,14 @@ public class DataService(IOptions<DatabaseOptions> options, ILogger logger) : ID
             foreach (var file in files)
             {
                 var sql = ReadEmbeddedSql(file);
-                await using var cmd = _connection!.CreateCommand();
+                await using var cmd = Connection!.CreateCommand();
                 cmd.CommandText = sql;
                 await cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
             }
         }
         finally
         {
-            await using var pragma = _connection!.CreateCommand();
+            await using var pragma = Connection!.CreateCommand();
             pragma.CommandText = "PRAGMA foreign_keys = ON;";
             await pragma.ExecuteNonQueryAsync(CancellationToken.None).ConfigureAwait(false);
         }

@@ -10,3 +10,11 @@ CREATE TABLE `table`
 );
 
 INSERT INTO `table` (`capacity`, `type`, `created_at`, `updated_at`) VALUES (4, 'Bar', DATETIME('now'), DATETIME('now'));
+
+DROP TRIGGER IF EXISTS trg_table_updated_at;
+CREATE TRIGGER trg_table_updated_at
+AFTER UPDATE ON `table`
+FOR EACH ROW
+BEGIN
+    UPDATE `table` SET updated_at = DATETIME('now') WHERE id = NEW.id;
+END;

@@ -32,7 +32,7 @@ internal static class Program
                 outputTemplate:
                 "[{Timestamp:dd-MM-yyyy HH:mm:ss} {Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
             .CreateLogger();
-        
+
         var builder = Host.CreateDefaultBuilder(args)
             .ConfigureAppConfiguration((ctx, config) =>
             {
@@ -51,22 +51,12 @@ internal static class Program
                 services.AddSingleton(Log.Logger);
                 services.AddInfrastructure();
             });
-        
-        var app = builder.Build();
-        
-        var db = app.Services.GetRequiredService<IDataService>();
-        var menuRepository = app.Services.GetRequiredService<IMenuRepository>();
-        var tableRepository = app.Services.GetRequiredService<ITableRepository>();
-        var userRepository = app.Services.GetRequiredService<IUserRepository>();
-        var reservationRepository = app.Services.GetRequiredService<IReservationRepository>();
-        
-        var connection = await db.StartAsync();
 
-        menuRepository.Connection = connection;
-        tableRepository.Connection = connection;
-        userRepository.Connection = connection;
-        reservationRepository.Connection = connection;
-        
+        var app = builder.Build();
+
+        var db = app.Services.GetRequiredService<IDataService>();
+        await db.StartAsync();
+
         return 0;
     }
 }

@@ -7,11 +7,11 @@ public class BaseEntity
         if (obj is not BaseEntity entity) return false;
         if (ReferenceEquals(this, obj)) return true;
         if (ReferenceEquals(null, obj)) return false;
-        
+
         if (Id != entity.Id) return false;
         if (CreatedAt != entity.CreatedAt) return false;
         if (UpdatedAt != entity.UpdatedAt) return false;
-        
+
         return true;
     }
 
@@ -24,9 +24,9 @@ public class BaseEntity
         return hashCode.ToHashCode();
     }
 
-    public required int Id {get;set;}
+    public required int Id { get; set; }
     [Column("created_at")]
-    public required DateTime CreatedAt {get;set;}
+    public required DateTime CreatedAt { get; set; }
     [Column("updated_at")]
-    public DateTime UpdatedAt {get;set;}
+    public DateTime? UpdatedAt { get; set; }
 }

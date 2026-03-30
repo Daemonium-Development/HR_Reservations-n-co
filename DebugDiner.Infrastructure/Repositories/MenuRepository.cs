@@ -5,79 +5,29 @@ using Serilog;
 
 namespace DebugDiner.Infrastructure.Repositories;
 
-public class MenuRepository(ILogger logger) : IMenuRepository
+public class MenuRepository(ILogger logger, IDataService data) : IMenuRepository
 {
-    public SqliteConnection? Connection { get; set; }
-    
     public async Task<IEnumerable<DishEntity>> GetItemsAsync(IEnumerable<int>? ids = null)
     {
-        if (Connection == null)
+        if (data.Connection is null)
         {
             logger.Error("Database connection is null.");
             return [];
         }
-
+        var command = data.Connection.CreateCommand();
         if (ids is null)
         {
-            return await GetAll();
+            command.CommandText = QueryConstants.GetAll.Replace("{table}", "`dish`");
         }
-
-        var entityList = new List<DishEntity>();
-        foreach (var id in ids)
+        else
         {
-            var dish = await GetById(id);
-            if (dish is null) continue;
-            entityList.Add(dish);
+            command.CommandText = QueryConstants.GetById
+                .Replace("{table}", "`dish`")
+                .Replace("{values}", string.Join(",", ids));
         }
-        return entityList;
-    }
-    
-    private async Task<DishEntity?> GetById(int id)
-    {
-        if (Connection == null)
-        {
-            logger.Error("Database connection is null.");
-            return null;
-        }
-
-        var command = Connection.CreateCommand();
-        command.CommandText = "SELECT * FROM `dish` WHERE id=@id"; 
-        command.Parameters.AddWithValue("@id", id);
-
         var reader = await command.ExecuteReaderAsync();
-        DishEntity? dish = null;
-        while (reader.Read())
-        {
-            dish = new DishEntity
-            {
-                Id = reader.GetInt32(0),
-                Name = reader.GetString(1),
-                Price = reader.GetDecimal(2),
-                Description = reader.GetString(3),
-                DishCategory = reader.GetString(4).MapToEnum<DishCategory>(),
-                AllergenInfo = reader.GetString(5),
-                CreatedAt = reader.GetDateTime(6),
-                UpdatedAt = reader.GetDateTime(7),
-            };
-        }
 
-        logger.Information("Dish retrieved from database.");
-        return dish;
-    }
-
-    private async Task<IEnumerable<DishEntity>> GetAll()
-    {
-        if (Connection == null)
-        {
-            logger.Error("Database connection is null.");
-            return [];
-        }
-        var command = Connection.CreateCommand();
-        command.CommandText = "SELECT * FROM `dish`"; 
-        
-        var reader = await command.ExecuteReaderAsync();
-        List<DishEntity> dishes = [];
-        
+        var dishes = new List<DishEntity>();
         while (reader.Read())
         {
             dishes.Add(new DishEntity
@@ -88,80 +38,109 @@ public class MenuRepository(ILogger logger) : IMenuRepository
                 Description = reader.GetString(3),
                 DishCategory = reader.GetString(4).MapToEnum<DishCategory>(),
                 AllergenInfo = reader.GetString(5),
-                CreatedAt = reader.GetDateTime(6),
-                UpdatedAt = reader.GetDateTime(7),
+                CreatedAt = DateTime.Parse(reader.GetString(6)),
+                UpdatedAt = reader.IsDBNull(7) ? DateTime.Now : DateTime.Parse(reader.GetString(7))
             });
         }
 
-        logger.Information("Retrieved {0} rows from database.", dishes.Count);
         return dishes;
     }
 
     public async Task<IEnumerable<DishEntity>> Create(IEnumerable<DishEntity> dishes)
     {
-        if (Connection == null)
+        if (data.Connection is null)
         {
             logger.Error("Database connection is null.");
             return [];
         }
-        
-        var query = @"INSERT INTO `dish` (name, description, price, category, allergen_info, updated_at) 
-                    VALUES (@name, @description, @price, @category, @allergen_info, @updatedAt) RETURNING id;";
 
-        foreach (var dish in dishes.AsEnumerable())
-        {
-            var command = Connection.CreateCommand();
-            command.CommandText = query;
-            command.Parameters.AddWithValue("@name", dish.Name);
-            command.Parameters.AddWithValue("@description", dish.Description);
-            command.Parameters.AddWithValue("@price", dish.Price);
-            command.Parameters.AddWithValue("@category", dish.DishCategory.ToString());
-            command.Parameters.AddWithValue("@allergen_info", dish.AllergenInfo);
-            command.Parameters.AddWithValue("@createdAt", dish.CreatedAt);
-            command.Parameters.AddWithValue("@updatedAt", DateTime.Now);
-            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
-        }
-
-        logger.Information("Created {0} rows from database.", dishes.Count());
-        return dishes;
-    }
-
-    public async Task<IEnumerable<DishEntity>> Update(IEnumerable<DishEntity> dishes)
-    {
-        if (Connection == null)
-        {
-            logger.Error("Database connection is null.");
-            return [];
-        }
-        
-        var query = @"INSERT OR REPLACE INTO `dish` (name, description, price, category, allergen_info, updated_at) 
-                    VALUES (@name, @description, @price, @category, @allergen_info, @updatedAt) RETURNING id;";
+        string[] columns = ["name", "price", "description", "category", "allergen_info"];
+        string[] values = ["@name", "@price", "@description", "@category", "@allergenInfo"];
 
         var ids = new List<long>();
         foreach (var dish in dishes.AsEnumerable())
         {
-            var command = Connection.CreateCommand();
-            command.CommandText = query;
-            command.Parameters.AddWithValue("@name", dish.Name);
-            command.Parameters.AddWithValue("@description", dish.Description);
-            command.Parameters.AddWithValue("@price", dish.Price);
-            command.Parameters.AddWithValue("@category", dish.DishCategory.ToString());
-            command.Parameters.AddWithValue("@allergen_info", dish.AllergenInfo);
-            command.Parameters.AddWithValue("@updatedAt", DateTime.Now);
-            var result = await command.ExecuteScalarAsync().ConfigureAwait(false);
-            var updatedId = (long)result;
-            
-            logger.Debug("Dish with id {id} updated.", updatedId);
-            if (updatedId > 0) { ids.Add(updatedId);}
+            long newId = 0;
+            try
+            {
+                var command = data.Connection.CreateCommand();
+                command.CommandText = QueryConstants.Insert
+                    .Replace("{table}", "`dish`")
+                    .Replace("{columns}", string.Join(",", columns))
+                    .Replace("{values}", string.Join(",", values));
+
+                command.Parameters.AddWithValue("@name", dish.Name);
+                command.Parameters.AddWithValue("@price", dish.Price);
+                command.Parameters.AddWithValue("@description", dish.Description);
+                command.Parameters.AddWithValue("@category", dish.DishCategory.ToString());
+                command.Parameters.AddWithValue("@allergenInfo", dish.AllergenInfo);
+
+                var result = await command.ExecuteScalarAsync();
+
+                if (result is null)
+                    continue;
+                newId = (long)result;
+
+                logger.Debug("Dish with id {Id} created.", newId);
+            }
+            catch (SqliteException e)
+            {
+                logger.Error(e, "Error creating dish with id {Id}", dish.Id);
+                continue;
+            }
+            ids.Add(newId);
         }
 
-        logger.Information("Created {0} rows from database.", dishes.Count());
+        return await GetItemsAsync(ids.Select(id => (int)id));
+    }
+
+    public async Task<IEnumerable<DishEntity>> Update(IEnumerable<DishEntity> dishes)
+    {
+        if (data.Connection is null)
+        {
+            logger.Error("Database connection is null.");
+            return [];
+        }
+
+        var ids = new List<long>();
+        foreach (var dish in dishes.AsEnumerable())
+        {
+            try
+            {
+                var command = data.Connection.CreateCommand();
+                command.CommandText = QueryConstants.Update
+                    .Replace("{table}", "`dish`")
+                    .Replace("{columns}", string.Join(",", ["name = @name", "price = @price", "description = @description", "category = @category", "allergen_info = @allergenInfo"]));
+
+                command.Parameters.AddWithValue("@id", dish.Id);
+                command.Parameters.AddWithValue("@name", dish.Name);
+                command.Parameters.AddWithValue("@price", dish.Price);
+                command.Parameters.AddWithValue("@description", dish.Description);
+                command.Parameters.AddWithValue("@category", dish.DishCategory.ToString());
+                command.Parameters.AddWithValue("@allergenInfo", dish.AllergenInfo);
+
+                var result = await command.ExecuteScalarAsync();
+
+                if (result is null)
+                    continue;
+                var updated = (long)result;
+
+                logger.Debug("Dish with id {Id} updated.", updated);
+            }
+            catch (SqliteException e)
+            {
+                logger.Error(e, "Error updating dish with id {Id}", dish.Id);
+                continue;
+            }
+            ids.Add(dish.Id);
+        }
+
         return await GetItemsAsync(ids.Select(id => (int)id));
     }
 
     public async Task<int> Delete(IEnumerable<DishEntity> dishes)
     {
-        if (Connection == null)
+        if (data.Connection is null)
         {
             logger.Error("Database connection is null.");
             return 0;
@@ -172,20 +151,22 @@ public class MenuRepository(ILogger logger) : IMenuRepository
         {
             try
             {
-                var command = Connection.CreateCommand();
-                command.CommandText = "DELETE FROM `dish` WHERE id=@id";
+                var command = data.Connection.CreateCommand();
+                command.CommandText = QueryConstants.Delete.Replace("{table}", "`dish`");
+
                 command.Parameters.AddWithValue("@id", dish.Id);
-                await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                await command.ExecuteNonQueryAsync();
+
+                logger.Debug("Dish with id {Id} deleted.", dish.Id);
             }
-            catch (Exception e)
+            catch (SqliteException e)
             {
                 logger.Error(e, "Error deleting dish with id {Id}", dish.Id);
                 continue;
             }
             deleted++;
         }
-        
-        logger.Information("Deleted {0} rows from database.", dishes.Count());
+
         return deleted;
     }
 }

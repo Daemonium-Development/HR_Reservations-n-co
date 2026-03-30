@@ -8,13 +8,13 @@ public class UserEntity : BaseEntity
         if (obj is not UserEntity entity) return false;
         if (ReferenceEquals(this, obj)) return true;
         if (ReferenceEquals(null, obj)) return false;
-        
+
         if (!base.Equals(obj)) return false;
         if (Name != entity.Name) return false;
         if (Email != entity.Email) return false;
         if (PasswordHash != entity.PasswordHash) return false;
         if (Role != entity.Role) return false;
-        
+
         return true;
     }
 

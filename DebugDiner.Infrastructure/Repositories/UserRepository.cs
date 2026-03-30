@@ -1,78 +1,33 @@
-﻿using DebugDiner.Domain.Abstractions;
+using DebugDiner.Domain.Abstractions;
 using DebugDiner.Domain.Utilities;
 using Microsoft.Data.Sqlite;
 using Serilog;
 
 namespace DebugDiner.Infrastructure.Repositories;
 
-/// <summary>
-/// The User Repository as a child of <see cref="BaseRepository"/>.
-/// We have the basic methods in here `GetById`, `GetAll`, and the `Create`, `Update`, `Delete` methods.
-/// If need be, add more methods here that merge two tables together into a different object.
-/// For now this should suffice.
-/// Any of these methods should be placed in a `try / catch` block to handle any exceptions that may occur.
-/// </summary>
-/// <param name="logger"></param>
-public class UserRepository(ILogger logger) : IUserRepository
+public class UserRepository(ILogger logger, IDataService data) : IUserRepository
 {
-    public SqliteConnection? Connection { get; set; }
-    
     public async Task<IEnumerable<UserEntity>> GetItemsAsync(IEnumerable<int>? ids = null)
     {
-        if (Connection == null)
+        if (data.Connection is null)
         {
             logger.Error("Database connection is null.");
             return [];
         }
-
+        var command = data.Connection.CreateCommand();
         if (ids is null)
         {
-            return await GetAll();
+            command.CommandText = QueryConstants.GetAll.Replace("{table}", "`user`");
         }
-
-        var entityList = new List<UserEntity>();
-        foreach (var id in ids)
+        else
         {
-            var user = await GetById(id);
-            if (user is null) continue;
-            entityList.Add(user);
+            command.CommandText = QueryConstants.GetById
+                .Replace("{table}", "`user`")
+                .Replace("{values}", string.Join(",", ids));
         }
-        return entityList;
-    }
-    
-    private async Task<UserEntity?> GetById(int id)
-    {
-        var command = Connection.CreateCommand();
-        command.CommandText = "SELECT * FROM `user` WHERE id=@id"; 
-        command.Parameters.AddWithValue("@id", id);
-
         var reader = await command.ExecuteReaderAsync();
-        UserEntity? user = null;
-        while (reader.Read())
-        {
-            user = new UserEntity
-            {
-                Id = reader.GetInt32(0),
-                Name = reader.GetString(1),
-                Email = reader.GetString(2),
-                PasswordHash = reader.GetString(3),
-                Role = reader.GetString(4).MapToEnum<Role>(),
-                CreatedAt = reader.GetDateTime(5),
-                UpdatedAt = reader.GetDateTime(6)
-            };
-        }
 
-        logger.Information("User retrieved from database.");
-        return user;
-    }
-
-    private async Task<IEnumerable<UserEntity>> GetAll()
-    {
-        var command = Connection.CreateCommand();
-        command.CommandText = "SELECT * FROM `user`";
-
-        var reader = await command.ExecuteReaderAsync();
-        List<UserEntity> users = [];
+        var users = new List<UserEntity>();
         while (reader.Read())
         {
             users.Add(new UserEntity
@@ -82,71 +37,107 @@ public class UserRepository(ILogger logger) : IUserRepository
                 Email = reader.GetString(2),
                 PasswordHash = reader.GetString(3),
                 Role = reader.GetString(4).MapToEnum<Role>(),
-                CreatedAt = reader.GetDateTime(5),
-                UpdatedAt = reader.GetDateTime(6)
+                CreatedAt = DateTime.Parse(reader.GetString(5)),
+                UpdatedAt = reader.IsDBNull(6) ? DateTime.Now : DateTime.Parse(reader.GetString(6))
             });
         }
 
-        logger.Information("Retrieved {0} rows from database.", users.Count);
         return users;
     }
 
     public async Task<IEnumerable<UserEntity>> Create(IEnumerable<UserEntity> users)
     {
-        if (Connection == null)
+        if (data.Connection is null)
         {
             logger.Error("Database connection is null.");
             return [];
         }
-        
-        var query = "INSERT INTO `user` (name, email, password_hash, role, updated_at) VALUES (@name, @email, @passwordHash, @role, @updatedAt)";
 
+        string[] columns = ["name", "email", "password_hash", "role"];
+        string[] values = ["@name", "@email", "@passwordHash", "@role"];
+
+        var ids = new List<long>();
         foreach (var user in users.AsEnumerable())
         {
-            var command = Connection.CreateCommand();
-            command.CommandText = query;
-            command.Parameters.AddWithValue("@name", user.Name);
-            command.Parameters.AddWithValue("@email", user.Email);
-            command.Parameters.AddWithValue("@passwordHash", user.PasswordHash);
-            command.Parameters.AddWithValue("@role", user.Role.ToString());
-            command.Parameters.AddWithValue("@updatedAt", DateTime.Now);
-            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+            long newId = 0;
+            try
+            {
+                var command = data.Connection.CreateCommand();
+                command.CommandText = QueryConstants.Insert
+                    .Replace("{table}", "`user`")
+                    .Replace("{columns}", string.Join(",", columns))
+                    .Replace("{values}", string.Join(",", values));
+
+                command.Parameters.AddWithValue("@name", user.Name);
+                command.Parameters.AddWithValue("@email", user.Email);
+                command.Parameters.AddWithValue("@passwordHash", user.PasswordHash);
+                command.Parameters.AddWithValue("@role", user.Role.ToString());
+
+                var result = await command.ExecuteScalarAsync();
+
+                if (result is null)
+                    continue;
+                newId = (long)result;
+
+                logger.Debug("User with id {Id} created.", newId);
+            }
+            catch (SqliteException e)
+            {
+                logger.Error(e, "Error creating user with id {Id}", user.Id);
+                continue;
+            }
+            ids.Add(newId);
         }
 
-        logger.Information("Created {0} rows from database.", users.Count());
-        return users;
+        return await GetItemsAsync(ids.Select(id => (int)id));
     }
 
     public async Task<IEnumerable<UserEntity>> Update(IEnumerable<UserEntity> users)
     {
-        if (Connection == null)
+        if (data.Connection is null)
         {
             logger.Error("Database connection is null.");
             return [];
         }
-        
-        var query = "INSERT OR REPLACE INTO `user` (Id, name, email, password_hash, role, updated_at) VALUES (@Id, @name, @email, @passwordHash, @role, @updatedAt)";
 
+        var ids = new List<long>();
         foreach (var user in users.AsEnumerable())
         {
-            var command = Connection.CreateCommand();
-            command.CommandText = query;
-            command.Parameters.AddWithValue("@id", user.Id);
-            command.Parameters.AddWithValue("@name", user.Name);
-            command.Parameters.AddWithValue("@email", user.Email);
-            command.Parameters.AddWithValue("@passwordHash", user.PasswordHash);
-            command.Parameters.AddWithValue("@role", user.Role.ToString());
-            command.Parameters.AddWithValue("@updatedAt", DateTime.Now);
-            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+            try
+            {
+                var command = data.Connection.CreateCommand();
+                command.CommandText = QueryConstants.Update
+                    .Replace("{table}", "`user`")
+                    .Replace("{columns}", string.Join(",", ["name = @name", "email = @email", "password_hash = @passwordHash", "role = @role"]));
+
+                command.Parameters.AddWithValue("@id", user.Id);
+                command.Parameters.AddWithValue("@name", user.Name);
+                command.Parameters.AddWithValue("@email", user.Email);
+                command.Parameters.AddWithValue("@passwordHash", user.PasswordHash);
+                command.Parameters.AddWithValue("@role", user.Role.ToString());
+
+                var result = await command.ExecuteScalarAsync();
+
+                if (result is null)
+                    continue;
+                var updated = (long)result;
+
+                logger.Debug("User with id {Id} updated.", updated);
+            }
+            catch (SqliteException e)
+            {
+                logger.Error(e, "Error updating user with id {Id}", user.Id);
+                continue;
+            }
+            ids.Add(user.Id);
         }
 
-        logger.Information("Updated {0} rows from database.", users.Count());
-        return users;
+        return await GetItemsAsync(ids.Select(id => (int)id));
     }
-    
+
     public async Task<int> Delete(IEnumerable<UserEntity> users)
     {
-        if (Connection == null)
+        if (data.Connection is null)
         {
             logger.Error("Database connection is null.");
             return 0;
@@ -157,25 +148,22 @@ public class UserRepository(ILogger logger) : IUserRepository
         {
             try
             {
-                var command = Connection.CreateCommand();
-                command.CommandText = "DELETE FROM `user` WHERE id=@id";
+                var command = data.Connection.CreateCommand();
+                command.CommandText = QueryConstants.Delete.Replace("{table}", "`user`");
+
                 command.Parameters.AddWithValue("@id", user.Id);
-                await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                await command.ExecuteNonQueryAsync();
+
+                logger.Debug("User with id {Id} deleted.", user.Id);
             }
-            catch (Exception e)
+            catch (SqliteException e)
             {
-                logger.Error(e, "Errror deleting user with id {Id}", user.Id);
+                logger.Error(e, "Error deleting user with id {Id}", user.Id);
                 continue;
             }
-
             deleted++;
         }
-        
-        logger.Information("Deleted {0} rows from database.", users.Count());
+
         return deleted;
     }
-    
-    // SUGGESTION:
-    // add `public async Task<User?> BuildUser(int id)` method here.
-    // This method will take in the id of the user and find the user, and their reservations, and return a User object.
 }

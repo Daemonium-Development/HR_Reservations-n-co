@@ -8,7 +8,7 @@ public class ReservationEntity : BaseEntity
         if (obj is not ReservationEntity entity) return false;
         if (ReferenceEquals(this, obj)) return true;
         if (ReferenceEquals(null, obj)) return false;
-        
+
         if (!base.Equals(obj)) return false;
         if (UserId != entity.UserId) return false;
         if (TableId != entity.TableId) return false;
@@ -16,7 +16,7 @@ public class ReservationEntity : BaseEntity
 
         return true;
     }
-    
+
     public override int GetHashCode()
     {
         var hashCode = new HashCode();
@@ -30,7 +30,7 @@ public class ReservationEntity : BaseEntity
     [Column("user_id")]
     public required int UserId { get; set; }
     [Column("table_id")]
-    public required int TableId { get; set; } 
+    public required int TableId { get; set; }
     [Column("start_time")]
     public required DateTime StartTime { get; set; }
     [Column("end_time")]

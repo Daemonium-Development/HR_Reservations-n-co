@@ -8,15 +8,15 @@ public class DishEntity : BaseEntity
         if (obj is not DishEntity entity) return false;
         if (ReferenceEquals(this, obj)) return true;
         if (ReferenceEquals(null, obj)) return false;
-        
+
         if (!base.Equals(obj)) return false;
-        
+
         if (Name != entity.Name) return false;
         if (Description != entity.Description) return false;
         if (Price != entity.Price) return false;
         if (DishCategory != entity.DishCategory) return false;
         if (AllergenInfo != entity.AllergenInfo) return false;
-        
+
         return true;
     }
 
