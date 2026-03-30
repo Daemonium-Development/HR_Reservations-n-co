@@ -1,5 +1,4 @@
 using DebugDiner.Domain.Abstractions;
-using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 namespace DebugDiner.Infrastructure.Repositories;
