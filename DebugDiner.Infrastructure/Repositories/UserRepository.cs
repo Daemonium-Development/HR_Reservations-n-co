@@ -14,7 +14,30 @@ namespace DebugDiner.Infrastructure.Repositories;
 /// <param name="logger"></param>
 public class UserRepository(ILogger logger) : BaseRepository, IUserRepository
 {
-    public async Task<UserEntity?> GetById(int id)
+    public async Task<IEnumerable<UserEntity>> GetItemsAsync(IEnumerable<int>? ids = null)
+    {
+        if (Connection == null)
+        {
+            logger.Error("Database connection is null.");
+            return [];
+        }
+
+        if (ids is null)
+        {
+            return await GetAll();
+        }
+
+        var entityList = new List<UserEntity>();
+        foreach (var id in ids)
+        {
+            var user = await GetById(id);
+            if (user is null) continue;
+            entityList.Add(user);
+        }
+        return entityList;
+    }
+    
+    private async Task<UserEntity?> GetById(int id)
     {
         if (Connection == null)
         {
@@ -46,7 +69,7 @@ public class UserRepository(ILogger logger) : BaseRepository, IUserRepository
         return user;
     }
 
-    public async Task<IEnumerable<UserEntity>> GetAll()
+    private async Task<IEnumerable<UserEntity>> GetAll()
     {
         if (Connection == null)
         {

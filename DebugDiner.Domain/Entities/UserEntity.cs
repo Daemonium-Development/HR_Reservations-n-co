@@ -1,6 +1,4 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Security.Cryptography.X509Certificates;
-using Microsoft.EntityFrameworkCore;
 
 [Table("user")]
 public class UserEntity : BaseEntity

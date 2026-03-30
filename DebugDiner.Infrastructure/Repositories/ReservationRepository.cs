@@ -6,7 +6,30 @@ namespace DebugDiner.Infrastructure.Repositories;
 
 public class ReservationRepository(ILogger logger) : BaseRepository, IReservationRepository
 {
-    public async Task<ReservationEntity?> GetById(int id)
+    public async Task<IEnumerable<ReservationEntity>> GetItemsAsync(IEnumerable<int>? ids = null)
+    {
+        if (Connection == null)
+        {
+            logger.Error("Database connection is null.");
+            return [];
+        }
+
+        if (ids is null)
+        {
+            return await GetAll();
+        }
+        
+        var entityList = new List<ReservationEntity>();
+        foreach (var id in ids)
+        {
+            var entity = await GetById(id);
+            if (entity is null) continue;
+            entityList.Add(entity);
+        }
+        return entityList;
+    }
+    
+    private async Task<ReservationEntity?> GetById(int id)
     {
         if (Connection == null)
         {
@@ -40,7 +63,7 @@ public class ReservationRepository(ILogger logger) : BaseRepository, IReservatio
         return reservation;
     }
 
-    public async Task<IEnumerable<ReservationEntity>> GetAll()
+    private async Task<IEnumerable<ReservationEntity>> GetAll()
     {
         if (Connection == null)
         {

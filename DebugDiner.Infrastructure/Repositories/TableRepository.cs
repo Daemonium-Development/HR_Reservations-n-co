@@ -5,7 +5,30 @@ namespace DebugDiner.Infrastructure.Repositories;
 
 public class TableRepository(ILogger logger) : BaseRepository, ITableRepository
 {
-    public async Task<TableEntity?> GetById(int id)
+    public async Task<IEnumerable<TableEntity>> GetItemsAsync(IEnumerable<int>? ids = null)
+    {
+        if (Connection == null)
+        {
+            logger.Error("Database connection is null.");
+            return [];
+        }
+
+        if (ids is null)
+        {
+            return await GetAll();
+        }
+        
+        var entityList = new List<TableEntity>();
+        foreach (var id in ids)
+        {
+            var entity = await GetById(id);
+            if (entity is null) continue;
+            entityList.Add(entity);
+        }
+        return entityList;
+    }
+    
+    private async Task<TableEntity?> GetById(int id)
     {
         if (Connection == null)
         {
@@ -38,7 +61,7 @@ public class TableRepository(ILogger logger) : BaseRepository, ITableRepository
         return table;
     }
 
-    public async Task<IEnumerable<TableEntity>> GetAll()
+    private async Task<IEnumerable<TableEntity>> GetAll()
     {
         if (Connection == null)
         {
