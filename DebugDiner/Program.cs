@@ -67,6 +67,9 @@ internal static class Program
         userRepository.Connection = connection;
         reservationRepository.Connection = connection;
         
+        // TESTING
+        var view = new LayoutView();
+
         return 0;
     }
 }
