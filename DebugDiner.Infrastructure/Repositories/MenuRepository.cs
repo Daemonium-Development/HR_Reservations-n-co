@@ -38,8 +38,8 @@ public class MenuRepository(ILogger logger, IDataService data) : IMenuRepository
                 Description = reader.GetString(3),
                 DishCategory = reader.GetString(4).MapToEnum<DishCategory>(),
                 AllergenInfo = reader.GetString(5),
-                CreatedAt = DateTime.Parse(reader.GetString(6)),
-                UpdatedAt = reader.IsDBNull(7) ? DateTime.Now : DateTime.Parse(reader.GetString(7))
+                CreatedAt = reader.GetDateTime(6),
+                UpdatedAt = reader.IsDBNull(7) ? DateTime.Now : reader.GetDateTime(7)
             });
         }
 

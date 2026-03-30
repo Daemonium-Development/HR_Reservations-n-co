@@ -35,12 +35,12 @@ public class ReservationRepository(ILogger logger, IDataService data) : IReserva
                 Id = reader.GetInt32(0),
                 UserId = reader.GetInt32(1),
                 TableId = reader.GetInt32(2),
-                StartTime = DateTime.Parse(reader.GetString(3)),
-                EndTime = DateTime.Parse(reader.GetString(4)),
+                StartTime = reader.GetDateTime(3),
+                EndTime = reader.GetDateTime(4),
                 Guests = reader.GetInt32(5),
                 Status = reader.GetString(6).MapToEnum<ReservationStatus>(),
-                CreatedAt = DateTime.Parse(reader.GetString(7)),
-                UpdatedAt = reader.IsDBNull(8) ? DateTime.Now : DateTime.Parse(reader.GetString(8))
+                CreatedAt = reader.GetDateTime(7),
+                UpdatedAt = reader.IsDBNull(8) ? DateTime.Now : reader.GetDateTime(8)
             });
         }
 

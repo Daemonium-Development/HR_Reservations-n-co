@@ -36,7 +36,7 @@ public class ArrangementRepository(ILogger logger, IDataService data) : IArrange
                 Name = reader.GetString(1),
                 BasePrice = reader.GetDecimal(2),
                 Type = reader.GetString(3).MapToEnum<ArrangementType>(),
-                CreatedAt = DateTime.Parse(reader.GetString(4)),
+                CreatedAt = reader.GetDateTime(4),
                 UpdatedAt = reader.IsDBNull(5) ? DateTime.Now : reader.GetDateTime(5)
             });
         }

@@ -35,8 +35,8 @@ public class TableRepository(ILogger logger, IDataService data) : ITableReposito
                 Id = reader.GetInt32(0),
                 Capacity = reader.GetInt32(1),
                 Type = reader.GetString(2).MapToEnum<TableType>(),
-                CreatedAt = DateTime.Parse(reader.GetString(3)),
-                UpdatedAt = reader.IsDBNull(4) ? DateTime.Now : DateTime.Parse(reader.GetString(4))
+                CreatedAt = reader.GetDateTime(3),
+                UpdatedAt = reader.IsDBNull(4) ? DateTime.Now : reader.GetDateTime(4)
             });
         }
 

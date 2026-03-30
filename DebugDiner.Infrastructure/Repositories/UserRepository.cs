@@ -37,8 +37,8 @@ public class UserRepository(ILogger logger, IDataService data) : IUserRepository
                 Email = reader.GetString(2),
                 PasswordHash = reader.GetString(3),
                 Role = reader.GetString(4).MapToEnum<Role>(),
-                CreatedAt = DateTime.Parse(reader.GetString(5)),
-                UpdatedAt = reader.IsDBNull(6) ? DateTime.Now : DateTime.Parse(reader.GetString(6))
+                CreatedAt = reader.GetDateTime(5),
+                UpdatedAt = reader.IsDBNull(6) ? DateTime.Now : reader.GetDateTime(6)
             });
         }
 
