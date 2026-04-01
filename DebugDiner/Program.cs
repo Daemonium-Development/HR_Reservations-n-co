@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Events;
+using Terminal.Gui;
 
 namespace DebugDiner;
 
@@ -57,8 +58,10 @@ internal static class Program
         var db = app.Services.GetRequiredService<IDataService>();
         await db.StartAsync();
 
-        // TEST Spectre.Console UI
-        var layout = new LayoutView();
+        // Initialize and run Terminal.Gui
+        Application.Init();
+        Application.Top?.Add(new WelcomeView());
+        Application.Run();
 
         return 0;
     }
