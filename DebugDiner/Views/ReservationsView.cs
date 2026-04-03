@@ -24,7 +24,9 @@ public class ReservationsView : BaseView
         };
 
         foreach (var (status, filtered) in grouped)
+        {
             tabView.AddTab(CreateTab(status.ToString(), filtered), false);
+        }
 
         SetContent(tabView);
     }
