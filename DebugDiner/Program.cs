@@ -69,11 +69,9 @@ internal static class Program
         var db = app.Services.GetRequiredService<IDataService>();
         await db.StartAsync();
 
-        // Initialize and run Terminal.Gui
         Terminal.Gui.Application.Init();
-        // NOTE: StopReportingMouseMoves prevents continuous mouse-position escape sequences
-        // ([M#w etc.) from leaking into focused TextFields as raw text in xterm-compatible terminals.
         Terminal.Gui.Application.Driver.StopReportingMouseMoves();
+        Terminal.Gui.Application.Driver.UncookMouse();
         var nav = app.Services.GetRequiredService<INavigationService>();
         nav.SetContentArea(Terminal.Gui.Application.Top!);
         nav.NavigateTo<WelcomeView>();
