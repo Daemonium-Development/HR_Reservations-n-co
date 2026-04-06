@@ -1,4 +1,4 @@
-﻿namespace DebugDiner.Infrastructure.Repositories;
+namespace DebugDiner.Infrastructure.Repositories;
 
 /// <summary>
 /// Replace any `{table}` placeholders with the table name

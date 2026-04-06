@@ -1,4 +1,4 @@
-﻿namespace DebugDiner.Domain.Utilities;
+namespace DebugDiner.Domain.Utilities;
 
 public static class RepositoryUtilities
 {

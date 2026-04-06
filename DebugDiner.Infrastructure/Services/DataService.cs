@@ -1,9 +1,9 @@
-﻿using System.Reflection;
 using DebugDiner.Domain.Abstractions;
 using DebugDiner.Domain.Configurations;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Options;
 using Serilog;
+using System.Reflection;
 
 namespace DebugDiner.Infrastructure.Services;
 

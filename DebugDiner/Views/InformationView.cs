@@ -1,14 +1,13 @@
 using Terminal.Gui;
-using System.Collections.Generic;
 
 namespace DebugDiner;
 
 public class InformationView : BaseView
 {
-    private readonly User _user;
-    private readonly List<Reservation> _reservations;
+    private readonly UserEntity _user;
+    private readonly List<ReservationEntity> _reservations;
 
-    public InformationView(User user, List<Reservation> reservations)
+    public InformationView(UserEntity user, List<ReservationEntity> reservations)
     {
         _user = user;
         _reservations = reservations;
@@ -27,7 +26,7 @@ public class InformationView : BaseView
         SetContent(CreateInformationContent());
     }
 
-    private Label CreateLabelRow(string label, string value, int y)
+    private static Label CreateLabelRow(string label, string value, int y)
     {
         return new Label($"{label}: {value}")
         {
@@ -52,25 +51,25 @@ public class InformationView : BaseView
             Height = Dim.Fill()
         };
 
-        int currentY = 1;
+        var currentY = 1;
 
         var nameLabel = CreateLabelRow("Name", string.IsNullOrWhiteSpace(_user.Name) ? "<empty>" : _user.Name, currentY);
-        currentY = Pos.Bottom(nameLabel) + 1;
+        currentY = 5; // Pos.Bottom(nameLabel) + 1;
         frame.Add(nameLabel);
 
-        if (_reservations != null && _reservations.Count > 0)
+        if (_reservations.Count > 0)
         {
             var reservationsLabel = new Label(",Reservations:")
             {
                 X = 2,
                 Y = currentY
             };
-            currentY = Pos.Bottom(reservationsLabel) + 1;
+            currentY = 5; //Pos.Bottom(reservationsLabel) + 1;
 
             var reservationStrings = new List<string>();
             foreach (var r in _reservations)
             {
-                reservationStrings.Add(r.ToString()); 
+                reservationStrings.Add(r.ToString());
             }
 
             var reservationList = new ListView(reservationStrings)
