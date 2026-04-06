@@ -1,11 +1,12 @@
 using System.Collections.ObjectModel;
+using DebugDiner.Services;
 using Terminal.Gui;
 
 namespace DebugDiner;
 
 public class ReservationsView : BaseView
 {
-    public ReservationsView(IEnumerable<ReservationEntity> reservations) : base()
+    public ReservationsView(INavigationService nav, IEnumerable<ReservationEntity> reservations) : base(nav)
     {
         SetHeaderTitle("Reservations");
         SetContentTitle("Booked Reservations");

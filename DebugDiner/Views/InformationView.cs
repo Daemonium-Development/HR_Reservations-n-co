@@ -1,19 +1,29 @@
+using DebugDiner.Domain.Abstractions;
+using DebugDiner.Services;
 using Terminal.Gui;
 
 namespace DebugDiner;
 
 public class InformationView : BaseView
 {
-    private readonly UserEntity _user;
+    private readonly UserEntity? _user;
     private readonly List<ReservationEntity> _reservations;
 
-    public InformationView(UserEntity user, List<ReservationEntity> reservations)
+    public InformationView(INavigationService nav, IReservationRepository reservationRepository) : base(nav)
     {
-        _user = user;
-        _reservations = reservations;
+        _user = AppState.CurrentUser;
+
+        if (_user is not null)
+        {
+            var all = reservationRepository.GetItemsAsync().GetAwaiter().GetResult();
+            _reservations = all.Where(r => r.UserId == _user.Id).ToList();
+        }
+        else
+        {
+            _reservations = [];
+        }
 
         SetHeaderTitle("Debug Diner | User information");
-        SetContentTitle("User cetails");
 
         SetNavigationItems(
             "Home",
@@ -53,8 +63,9 @@ public class InformationView : BaseView
 
         var currentY = 1;
 
-        var nameLabel = CreateLabelRow("Name", string.IsNullOrWhiteSpace(_user.Name) ? "<empty>" : _user.Name, currentY);
-        currentY = 5; // Pos.Bottom(nameLabel) + 1;
+        var name = _user is null ? "<not logged in>" : (string.IsNullOrWhiteSpace(_user.Name) ? "<empty>" : _user.Name);
+        var nameLabel = CreateLabelRow("Name", name, currentY);
+        currentY = 5;
         frame.Add(nameLabel);
 
         if (_reservations.Count > 0)
@@ -64,12 +75,12 @@ public class InformationView : BaseView
                 X = 2,
                 Y = currentY
             };
-            currentY = 5; //Pos.Bottom(reservationsLabel) + 1;
+            currentY = 5;
 
             var reservationStrings = new List<string>();
             foreach (var r in _reservations)
             {
-                reservationStrings.Add(r.ToString());
+                reservationStrings.Add(r.ToString() ?? string.Empty);
             }
 
             var reservationList = new ListView(reservationStrings)
@@ -95,5 +106,4 @@ public class InformationView : BaseView
         container.Add(frame);
         return container;
     }
-
 }

@@ -1,3 +1,4 @@
+using DebugDiner.Services;
 using Terminal.Gui;
 
 namespace DebugDiner;
@@ -8,7 +9,7 @@ namespace DebugDiner;
 // </summary>
 public class WelcomeView : BaseView
 {
-    public WelcomeView() : base()
+    public WelcomeView(INavigationService nav) : base(nav)
     {
         SetHeaderTitle("Welcome to Debug Diner");
         SetContentTitle("Welcome");
@@ -43,7 +44,6 @@ public class WelcomeView : BaseView
             Y = 8,
             Text = "Press Enter to continue",
         };
-
         // Continue button
         var continueBtn = new Button
         {
@@ -52,6 +52,7 @@ public class WelcomeView : BaseView
             Text = "Continue",
             IsDefault = true,
         };
+        continueBtn.Clicked += nav.NavigateTo<LoginView>;
 
         welcomeContainer.Add(welcomeLabel, subtitleLabel, instructionLabel, continueBtn);
         SetContent(welcomeContainer);

@@ -1,4 +1,4 @@
-using DebugDiner.Domain.Abstractions;
+﻿using DebugDiner.Domain.Abstractions;
 using DebugDiner.Domain.Configurations;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Options;

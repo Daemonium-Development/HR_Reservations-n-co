@@ -1,6 +1,4 @@
-DROP TABLE IF EXISTS `user`;
-
-CREATE TABLE `user`
+CREATE IF NOT EXISTS TABLE `user`
 (
     `id`            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     `name`          TEXT NOT NULL,

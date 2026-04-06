@@ -32,6 +32,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\DebugDiner.Application\DebugDiner.Application.csproj" />
       <ProjectReference Include="..\DebugDiner.Domain\DebugDiner.Domain.csproj" />
       <ProjectReference Include="..\DebugDiner.Infrastructure\DebugDiner.Infrastructure.csproj" />
     </ItemGroup>

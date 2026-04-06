@@ -1,10 +1,11 @@
+using DebugDiner.Services;
 using Terminal.Gui;
 
 namespace DebugDiner;
 
 public class MakeReservationsView : BaseView
 {
-    public MakeReservationsView() : base()
+    public MakeReservationsView(INavigationService nav) : base(nav)
     {
         SetHeaderTitle("Make Reservations");
         SetContentTitle("Fill the form to make an reservation");

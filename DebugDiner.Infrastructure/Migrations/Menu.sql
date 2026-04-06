@@ -1,6 +1,4 @@
-DROP TABLE IF EXISTS `dish`;
-
-CREATE TABLE `dish`
+CREATE IF NOT EXISTS TABLE `dish`
 (
     `id`           INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     `name`         TEXT NOT NULL,

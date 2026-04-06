@@ -1,5 +1,7 @@
+using DebugDiner.Application;
 using DebugDiner.Domain.Abstractions;
 using DebugDiner.Infrastructure;
+using DebugDiner.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -50,7 +52,16 @@ internal static class Program
                     builder.AddSerilog(dispose: true);
                 });
                 services.AddSingleton(Log.Logger);
+                services.AddSingleton<INavigationService, NavigationService>();
                 services.AddInfrastructure();
+                services.AddApplication();
+
+                services.AddTransient<WelcomeView>();
+                services.AddTransient<LoginView>();
+                services.AddTransient<RegisterView>();
+                services.AddTransient<HomeView>();
+                services.AddTransient<InformationView>();
+                services.AddTransient<MakeReservationsView>();
             });
 
         var app = builder.Build();
@@ -59,9 +70,14 @@ internal static class Program
         await db.StartAsync();
 
         // Initialize and run Terminal.Gui
-        Application.Init();
-        Application.Top?.Add(new WelcomeView());
-        Application.Run();
+        Terminal.Gui.Application.Init();
+        // NOTE: StopReportingMouseMoves prevents continuous mouse-position escape sequences
+        // ([M#w etc.) from leaking into focused TextFields as raw text in xterm-compatible terminals.
+        Terminal.Gui.Application.Driver.StopReportingMouseMoves();
+        var nav = app.Services.GetRequiredService<INavigationService>();
+        nav.SetContentArea(Terminal.Gui.Application.Top!);
+        nav.NavigateTo<WelcomeView>();
+        Terminal.Gui.Application.Run();
 
         return 0;
     }

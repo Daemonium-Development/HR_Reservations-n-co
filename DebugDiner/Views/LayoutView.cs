@@ -49,33 +49,5 @@ public static class LayoutView
         };
     }
 
-    // <summary>
-    // Creates the navigation sidebar menu with styling
-    // </summary>
-    public static ListView CreateNavigationMenu(FrameView headerFrame)
-    {
-        return new ListView
-        {
-            X = 0,
-            Y = Pos.Bottom(headerFrame),
-            Width = 20,
-            Height = Dim.Fill(),
-            ColorScheme = DefaultColorScheme,
-        };
-    }
 
-    // <summary>
-    // Creates the main content area frame with styling
-    // </summary>
-    public static FrameView CreateContentFrame(FrameView headerFrame, ListView navigationMenu)
-    {
-        return new FrameView
-        {
-            X = Pos.Right(navigationMenu),
-            Y = Pos.Bottom(headerFrame),
-            Width = Dim.Fill(),
-            Height = Dim.Fill(),
-            ColorScheme = DefaultColorScheme,
-        };
-    }
 }

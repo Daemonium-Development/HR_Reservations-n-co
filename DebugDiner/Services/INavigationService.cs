@@ -6,4 +6,5 @@ public interface INavigationService
 {
     public void NavigateTo<TView>() where TView : View;
     public void SetContentArea(View contentArea);
+    public void NavigateBack();
 }

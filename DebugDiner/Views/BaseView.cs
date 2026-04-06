@@ -1,48 +1,82 @@
 using System.Collections.ObjectModel;
+using DebugDiner.Services;
 using Terminal.Gui;
 
 namespace DebugDiner;
 
-public class BaseView : Window
+public class BaseView : View
 {
     protected FrameView HeaderFrame { get; }
     protected ListView NavigationMenu { get; }
     protected FrameView ContentFrame { get; }
     protected Label HeaderLabel { get; }
 
-    public BaseView()
+    public BaseView(INavigationService nav)
     {
-        Title = "Debug Diner - Restaurant Reservation System";
         X = 0;
         Y = 0;
         Width = Dim.Fill();
         Height = Dim.Fill();
         ColorScheme = LayoutView.DefaultColorScheme;
 
-        // Create layout components using LayoutView factory methods
         HeaderFrame = LayoutView.CreateHeaderFrame();
         HeaderLabel = LayoutView.CreateHeaderLabel("Debug Diner - Restaurant Reservation System");
         HeaderFrame.Add(HeaderLabel);
         Add(HeaderFrame);
 
-        NavigationMenu = LayoutView.CreateNavigationMenu(HeaderFrame);
-        Add(NavigationMenu);
+        var navPanel = new View
+        {
+            X = 0,
+            Y = Pos.Bottom(HeaderFrame),
+            Width = 20,
+            Height = Dim.Fill(),
+            ColorScheme = LayoutView.DefaultColorScheme,
+        };
 
-        ContentFrame = LayoutView.CreateContentFrame(HeaderFrame, NavigationMenu);
+        NavigationMenu = new ListView
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Height = Dim.Fill() - 2,
+            ColorScheme = LayoutView.DefaultColorScheme,
+        };
+
+        var backBtn = new Button
+        {
+            X = 0,
+            Y = Pos.Bottom(NavigationMenu),
+            Text = "< Back",
+        };
+        backBtn.Clicked += nav.NavigateBack;
+
+        var exitBtn = new Button
+        {
+            X = 0,
+            Y = Pos.Bottom(backBtn),
+            Text = "Exit",
+        };
+        exitBtn.Clicked += () => Terminal.Gui.Application.RequestStop();
+
+        navPanel.Add(NavigationMenu, backBtn, exitBtn);
+        Add(navPanel);
+
+        ContentFrame = new FrameView
+        {
+            X = Pos.Right(navPanel),
+            Y = Pos.Bottom(HeaderFrame),
+            Width = Dim.Fill(),
+            Height = Dim.Fill(),
+            ColorScheme = LayoutView.DefaultColorScheme,
+        };
         Add(ContentFrame);
     }
 
-    // <summary>
-    // Set the navigation menu items
-    // </summary>
     protected void SetNavigationItems(params string[] items)
     {
         NavigationMenu.SetSource(new ObservableCollection<string>(items));
     }
 
-    // <summary>
-    // Clear and set new content in the main content area
-    // </summary>
     protected void SetContent(View view)
     {
         ContentFrame.RemoveAll();
@@ -56,17 +90,11 @@ public class BaseView : Window
         }
     }
 
-    // <summary>
-    // Update the header title
-    // </summary>
     protected void SetHeaderTitle(string title)
     {
         HeaderLabel.Text = title;
     }
 
-    // <summary>
-    // Update the content frame title
-    // </summary>
     protected void SetContentTitle(string title)
     {
         ContentFrame.Title = title;
