@@ -69,6 +69,13 @@ internal static class Program
         var db = app.Services.GetRequiredService<IDataService>();
         await db.StartAsync();
 
+        // NOTE: Uncomment this to create some test admin users
+        // var auth = app.Services.GetRequiredService<IAuthService>();
+        // await auth.RegisterAsync("Soufian", "soufian@gmail.com", "1234", true);
+        // await auth.RegisterAsync("Randy", "randy@gmail.com", "1234", true);
+        // await auth.RegisterAsync("Quintin", "quintin@gmail.com", "1234", true);
+        // await auth.RegisterAsync("Lars", "lars@gmail.com", "1234", true);
+
         Terminal.Gui.Application.Init();
         Terminal.Gui.Application.Driver.StopReportingMouseMoves();
         Terminal.Gui.Application.Driver.UncookMouse();

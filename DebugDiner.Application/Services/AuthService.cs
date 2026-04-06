@@ -30,7 +30,7 @@ public class AuthService(IUserRepository users, ILogger logger) : IAuthService
         }
     }
 
-    public async Task<UserEntity?> RegisterAsync(string name, string email, string password)
+    public async Task<UserEntity?> RegisterAsync(string name, string email, string password, bool isAdmin = false)
     {
         try
         {
@@ -48,7 +48,7 @@ public class AuthService(IUserRepository users, ILogger logger) : IAuthService
                 Name = name,
                 Email = email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
-                Role = Role.Customer
+                Role = isAdmin ? Role.Admin : Role.Customer
             };
 
             var created = await users.Create([entity]);
