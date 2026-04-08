@@ -1,6 +1,4 @@
-DROP TABLE IF EXISTS `reservation_arrangement`;
-
-CREATE TABLE `reservation_arrangement`
+CREATE IF NOT EXISTS TABLE `reservation_arrangement`
 (
     `id`          INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     `reservation_id` INTEGER NOT NULL,

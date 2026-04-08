@@ -1,5 +1,7 @@
-﻿using DebugDiner.Domain.Abstractions;
+using DebugDiner.Application;
+using DebugDiner.Domain.Abstractions;
 using DebugDiner.Infrastructure;
+using DebugDiner.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -50,7 +52,16 @@ internal static class Program
                     builder.AddSerilog(dispose: true);
                 });
                 services.AddSingleton(Log.Logger);
+                services.AddSingleton<INavigationService, NavigationService>();
                 services.AddInfrastructure();
+                services.AddApplication();
+
+                services.AddTransient<WelcomeView>();
+                services.AddTransient<LoginView>();
+                services.AddTransient<RegisterView>();
+                services.AddTransient<HomeView>();
+                services.AddTransient<InformationView>();
+                services.AddTransient<MakeReservationsView>();
             });
 
         var app = builder.Build();
@@ -58,10 +69,20 @@ internal static class Program
         var db = app.Services.GetRequiredService<IDataService>();
         await db.StartAsync();
 
-        // Initialize and run Terminal.Gui
-        Application.Init();
-        Application.Top?.Add(new WelcomeView());
-        Application.Run();
+        // NOTE: Uncomment this to create some test admin users
+        // var auth = app.Services.GetRequiredService<IAuthService>();
+        // await auth.RegisterAsync("Soufian", "soufian@gmail.com", "1234", true);
+        // await auth.RegisterAsync("Randy", "randy@gmail.com", "1234", true);
+        // await auth.RegisterAsync("Quintin", "quintin@gmail.com", "1234", true);
+        // await auth.RegisterAsync("Lars", "lars@gmail.com", "1234", true);
+
+        Terminal.Gui.Application.Init();
+        Terminal.Gui.Application.Driver.StopReportingMouseMoves();
+        Terminal.Gui.Application.Driver.UncookMouse();
+        var nav = app.Services.GetRequiredService<INavigationService>();
+        nav.SetContentArea(Terminal.Gui.Application.Top!);
+        nav.NavigateTo<WelcomeView>();
+        Terminal.Gui.Application.Run();
 
         return 0;
     }

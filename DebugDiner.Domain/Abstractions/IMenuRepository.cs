@@ -1,4 +1,4 @@
-﻿namespace DebugDiner.Domain.Abstractions;
+namespace DebugDiner.Domain.Abstractions;
 
 public interface IMenuRepository
 {

@@ -1,6 +1,4 @@
-DROP TABLE IF EXISTS `arrangement`;
-
-CREATE TABLE `arrangement`
+CREATE IF NOT EXISTS TABLE `arrangement`
 (
     `id`         INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     `name`       TEXT NOT NULL,

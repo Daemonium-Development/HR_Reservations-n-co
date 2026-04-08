@@ -1,4 +1,4 @@
-﻿namespace DebugDiner.Domain.Configurations;
+namespace DebugDiner.Domain.Configurations;
 
 public class DatabaseOptions
 {

@@ -1,20 +1,29 @@
+using DebugDiner.Domain.Abstractions;
+using DebugDiner.Services;
 using Terminal.Gui;
-using System.Collections.Generic;
 
 namespace DebugDiner;
 
 public class InformationView : BaseView
 {
-    private readonly User _user;
-    private readonly List<Reservation> _reservations;
+    private readonly UserEntity? _user;
+    private readonly List<ReservationEntity> _reservations;
 
-    public InformationView(User user, List<Reservation> reservations)
+    public InformationView(INavigationService nav, IReservationRepository reservationRepository) : base(nav)
     {
-        _user = user;
-        _reservations = reservations;
+        _user = AppState.CurrentUser;
+
+        if (_user is not null)
+        {
+            var all = reservationRepository.GetItemsAsync().GetAwaiter().GetResult();
+            _reservations = all.Where(r => r.UserId == _user.Id).ToList();
+        }
+        else
+        {
+            _reservations = [];
+        }
 
         SetHeaderTitle("Debug Diner | User information");
-        SetContentTitle("User cetails");
 
         SetNavigationItems(
             "Home",
@@ -27,7 +36,7 @@ public class InformationView : BaseView
         SetContent(CreateInformationContent());
     }
 
-    private Label CreateLabelRow(string label, string value, int y)
+    private static Label CreateLabelRow(string label, string value, int y)
     {
         return new Label($"{label}: {value}")
         {
@@ -52,25 +61,26 @@ public class InformationView : BaseView
             Height = Dim.Fill()
         };
 
-        int currentY = 1;
+        var currentY = 1;
 
-        var nameLabel = CreateLabelRow("Name", string.IsNullOrWhiteSpace(_user.Name) ? "<empty>" : _user.Name, currentY);
-        currentY = Pos.Bottom(nameLabel) + 1;
+        var name = _user is null ? "<not logged in>" : (string.IsNullOrWhiteSpace(_user.Name) ? "<empty>" : _user.Name);
+        var nameLabel = CreateLabelRow("Name", name, currentY);
+        currentY = 5;
         frame.Add(nameLabel);
 
-        if (_reservations != null && _reservations.Count > 0)
+        if (_reservations.Count > 0)
         {
             var reservationsLabel = new Label(",Reservations:")
             {
                 X = 2,
                 Y = currentY
             };
-            currentY = Pos.Bottom(reservationsLabel) + 1;
+            currentY = 5;
 
             var reservationStrings = new List<string>();
             foreach (var r in _reservations)
             {
-                reservationStrings.Add(r.ToString()); 
+                reservationStrings.Add(r.ToString() ?? string.Empty);
             }
 
             var reservationList = new ListView(reservationStrings)
@@ -96,5 +106,4 @@ public class InformationView : BaseView
         container.Add(frame);
         return container;
     }
-
 }
