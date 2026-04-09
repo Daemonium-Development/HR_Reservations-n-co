@@ -41,7 +41,7 @@ public class HomeView : BaseView
                     nav.NavigateTo<CreateDishView>();
                     break;
                 case (5, Role.Admin):
-                    // View Users View — stub, not yet implemented
+                    nav.NavigateTo<AdminUsersView>();
                     break;
                 case (6, Role.Admin):
                     nav.NavigateTo<AddUserView>();
