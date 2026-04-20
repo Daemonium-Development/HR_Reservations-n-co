@@ -1,3 +1,4 @@
+using DebugDiner.Domain.Abstractions;
 using DebugDiner.Services;
 using Terminal.Gui;
 
@@ -5,7 +6,7 @@ namespace DebugDiner;
 
 public class CreateDishView : BaseView
 {
-    public CreateDishView(INavigationService nav) : base(nav)
+    public CreateDishView(INavigationService nav, IMenuRepository menu) : base(nav)
     {
         SetHeaderTitle("Debug Diner | Create Dish");
 
@@ -15,6 +16,20 @@ public class CreateDishView : BaseView
             "Reservations",
             "Logout"
         );
+
+        NavigationMenu.OpenSelectedItem += (ListViewItemEventArgs e) =>
+        {
+            switch (e.Item)
+            {
+                case 0: nav.NavigateTo<HomeView>(); break;
+                case 1: nav.NavigateTo<CreateDishView>(); break;
+                case 2: nav.NavigateTo<ReservationsView>(); break;
+                case 3:
+                    AppState.CurrentUser = null;
+                    nav.NavigateTo<WelcomeView>();
+                    break;
+            }
+        };
 
         var container = new View
         {
@@ -74,39 +89,85 @@ public class CreateDishView : BaseView
             Width = 40,
         };
 
-        var errorLabel = new Label
+        var categoryLabel = new Label
+        {
+            X = 5,
+            Y = 9,
+            Text = "Category (Meat/Fish/Vegetarian/Vegan):",
+        };
+
+        var categoryField = new TextField
         {
             X = 5,
             Y = 10,
+            Width = 30,
+        };
+
+        var errorLabel = new Label
+        {
+            X = 5,
+            Y = 12,
             Text = string.Empty,
         };
 
         var saveBtn = new Button
         {
             X = 5,
-            Y = 12,
+            Y = 14,
             Text = "Save",
         };
 
         saveBtn.Clicked += () =>
         {
             var name = nameField.Text.ToString() ?? string.Empty;
-            var price = priceField.Text.ToString() ?? string.Empty;
+            var priceText = priceField.Text.ToString() ?? string.Empty;
+            var description = descField.Text.ToString() ?? string.Empty;
+            var categoryText = categoryField.Text.ToString() ?? string.Empty;
 
-            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(price))
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(priceText))
             {
-                errorLabel.Text = "Name and price are required..";
+                errorLabel.Text = "Name and price are required.";
                 return;
             }
 
-            MessageBox.Query("Complete", "Dish created !", "OK");
+            if (!decimal.TryParse(priceText, out var price) || price < 0)
+            {
+                errorLabel.Text = "Price must be a valid positive number.";
+                return;
+            }
+
+            if (!Enum.TryParse<DishCategory>(categoryText, ignoreCase: true, out var category))
+            {
+                errorLabel.Text = "Category must be: Meat, Fish, Vegetarian, or Vegan.";
+                return;
+            }
+
+            var entity = new DishEntity
+            {
+                Id = 0,
+                CreatedAt = DateTime.UtcNow,
+                Name = name,
+                Description = description,
+                Price = price,
+                DishCategory = category,
+                AllergenInfo = string.Empty,
+            };
+
+            var result = menu.Create([entity]).GetAwaiter().GetResult();
+            if (!result.Any())
+            {
+                errorLabel.Text = "Failed to save dish.";
+                return;
+            }
+
+            MessageBox.Query("Complete", $"Dish '{name}' created.", "OK");
             nav.NavigateTo<HomeView>();
         };
 
         var cancelBtn = new Button
         {
             X = 15,
-            Y = 12,
+            Y = 14,
             Text = "Cancel",
         };
 
@@ -116,6 +177,7 @@ public class CreateDishView : BaseView
             nameLabel, nameField,
             priceLabel, priceField,
             descLabel, descField,
+            categoryLabel, categoryField,
             errorLabel,
             saveBtn, cancelBtn
         );

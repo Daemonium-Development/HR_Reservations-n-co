@@ -1,4 +1,4 @@
-CREATE IF NOT EXISTS TABLE `reservation`
+CREATE TABLE IF NOT EXISTS `reservation`
 (
     `id`         INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     `user_id`    INTEGER NOT NULL,

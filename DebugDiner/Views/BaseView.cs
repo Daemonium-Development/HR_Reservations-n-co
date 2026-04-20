@@ -74,16 +74,16 @@ public class BaseView : View
 
     protected void SetNavigationItems(params string[] items)
     {
+        if (NavigationMenu.Source is null || NavigationMenu.Source.Count == 0)
+        {
+            NavigationMenu.SetSource(new ObservableCollection<string>(items));
+            return;
+        }
         var collection = NavigationMenu.Source.ToList();
         List<string> navItems = [];
         foreach (string item in collection)
         {
             navItems.Add(item);
-        }
-        if (collection is null or { Count: 0 })
-        {
-            NavigationMenu.SetSource(new ObservableCollection<string>(items));
-            return;
         }
         navItems.AddRange(items);
         NavigationMenu.SetSource(new ObservableCollection<string>(navItems));

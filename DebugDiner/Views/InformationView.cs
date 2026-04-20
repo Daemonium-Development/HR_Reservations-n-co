@@ -1,5 +1,6 @@
 using DebugDiner.Domain.Abstractions;
 using DebugDiner.Services;
+using System.Collections.ObjectModel;
 using Terminal.Gui;
 
 namespace DebugDiner;
@@ -33,6 +34,20 @@ public class InformationView : BaseView
             "Logout"
         );
 
+        NavigationMenu.OpenSelectedItem += (ListViewItemEventArgs e) =>
+        {
+            switch (e.Item)
+            {
+                case 0: nav.NavigateTo<HomeView>(); break;
+                case 1: nav.NavigateTo<MakeReservationsView>(); break;
+                case 2: nav.NavigateTo<ReservationsView>(); break;
+                case 4:
+                    AppState.CurrentUser = null;
+                    nav.NavigateTo<WelcomeView>();
+                    break;
+            }
+        };
+
         SetContent(CreateInformationContent());
     }
 
@@ -65,22 +80,24 @@ public class InformationView : BaseView
 
         var name = _user is null ? "<not logged in>" : (string.IsNullOrWhiteSpace(_user.Name) ? "<empty>" : _user.Name);
         var nameLabel = CreateLabelRow("Name", name, currentY);
-        currentY = 5;
+        currentY += 2;
         frame.Add(nameLabel);
 
         if (_reservations.Count > 0)
         {
-            var reservationsLabel = new Label(",Reservations:")
+            var reservationsLabel = new Label("Reservations:")
             {
                 X = 2,
                 Y = currentY
             };
-            currentY = 5;
+            currentY += 1;
 
             var reservationStrings = new List<string>();
             foreach (var r in _reservations)
             {
-                reservationStrings.Add(r.ToString() ?? string.Empty);
+                reservationStrings.Add(
+                    $"#{r.Id} | Table {r.TableId} | {r.StartTime:dd-MM-yyyy HH:mm} - {r.EndTime:HH:mm} | {r.Guests} guests | {r.Status}"
+                );
             }
 
             var reservationList = new ListView(reservationStrings)
@@ -90,6 +107,7 @@ public class InformationView : BaseView
                 Width = Dim.Fill() - 4,
                 Height = 10
             };
+            reservationList.SetSource(new ObservableCollection<string>(reservationStrings));
 
             frame.Add(reservationsLabel, reservationList);
         }

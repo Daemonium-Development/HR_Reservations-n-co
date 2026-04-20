@@ -62,6 +62,7 @@ internal static class Program
                 services.AddTransient<HomeView>();
                 services.AddTransient<InformationView>();
                 services.AddTransient<MakeReservationsView>();
+                services.AddTransient<ReservationsView>();
                 services.AddTransient<AddUserView>();
                 services.AddTransient<CreateDishView>();
             });
@@ -79,13 +80,27 @@ internal static class Program
         // await auth.RegisterAsync("Lars", "lars@gmail.com", "1234", true);
 
         Terminal.Gui.Application.Init();
-        Terminal.Gui.Application.Driver.StopReportingMouseMoves();
-        Terminal.Gui.Application.Driver.UncookMouse();
+
+        DisableMouseTracking();
+
         var nav = app.Services.GetRequiredService<INavigationService>();
         nav.SetContentArea(Terminal.Gui.Application.Top!);
         nav.NavigateTo<WelcomeView>();
         Terminal.Gui.Application.Run();
 
         return 0;
+    }
+
+    private static void DisableMouseTracking()
+    {
+        Terminal.Gui.Application.Driver.StopReportingMouseMoves();
+
+        // Write ANSI sequences directly to stdout to cover every mouse mode:
+        //   ?1000l  – disable X10 button-click reporting
+        //   ?1002l  – disable button-motion reporting
+        //   ?1003l  – disable any-motion reporting
+        //   ?1006l  – disable SGR extended mouse mode
+        Console.Write("\x1b[?1000l\x1b[?1002l\x1b[?1003l\x1b[?1006l");
+        Console.Out.Flush();
     }
 }

@@ -1,4 +1,4 @@
-namespace DebugDiner.Domain.Configurations;
+﻿namespace DebugDiner.Domain.Configurations;
 
 public class DatabaseOptions
 {
@@ -7,7 +7,9 @@ public class DatabaseOptions
 
     public string ResolvedSource()
     {
-        if (string.IsNullOrWhiteSpace(Source)) return Source;
+        if (string.IsNullOrWhiteSpace(Source))
+            throw new InvalidOperationException("Database:Source is not configured in appsettings.json.");
+
         if (!Source.Contains("%APPDATA%"))
         {
             return Path.Combine(Environment.CurrentDirectory, Source);

@@ -1,3 +1,4 @@
+using DebugDiner.Application;
 using DebugDiner.Services;
 using Terminal.Gui;
 
@@ -5,7 +6,7 @@ namespace DebugDiner;
 
 public class AddUserView : BaseView
 {
-    public AddUserView(INavigationService nav) : base(nav)
+    public AddUserView(INavigationService nav, IAuthService auth) : base(nav)
     {
         SetHeaderTitle("Debug Diner | Add User");
 
@@ -16,6 +17,20 @@ public class AddUserView : BaseView
             "Reservations",
             "Logout"
         );
+
+        NavigationMenu.OpenSelectedItem += (ListViewItemEventArgs e) =>
+        {
+            switch (e.Item)
+            {
+                case 0: nav.NavigateTo<HomeView>(); break;
+                case 2: nav.NavigateTo<AddUserView>(); break;
+                case 3: nav.NavigateTo<ReservationsView>(); break;
+                case 4:
+                    AppState.CurrentUser = null;
+                    nav.NavigateTo<WelcomeView>();
+                    break;
+            }
+        };
 
         var container = new View
         {
@@ -61,17 +76,40 @@ public class AddUserView : BaseView
             Width = 40,
         };
 
+        var passwordLabel = new Label
+        {
+            X = 5,
+            Y = 7,
+            Text = "Password:",
+        };
+
+        var passwordField = new TextField
+        {
+            X = 20,
+            Y = 7,
+            Width = 30,
+            Secret = true,
+        };
+
+        var isAdminCheckBox = new CheckBox
+        {
+            X = 5,
+            Y = 9,
+            Text = "Grant admin role",
+            Checked = false,
+        };
+
         var errorLabel = new Label
         {
             X = 5,
-            Y = 10,
+            Y = 11,
             Text = string.Empty,
         };
 
         var createBtn = new Button
         {
             X = 5,
-            Y = 12,
+            Y = 13,
             Text = "Create",
         };
 
@@ -79,21 +117,29 @@ public class AddUserView : BaseView
         {
             var name = nameField.Text.ToString() ?? string.Empty;
             var email = emailField.Text.ToString() ?? string.Empty;
+            var password = passwordField.Text.ToString() ?? string.Empty;
 
-            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(email))
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             {
-                errorLabel.Text = "Name and email are mandatory";
+                errorLabel.Text = "Name, email and password are required.";
                 return;
             }
 
-            MessageBox.Query("Success", "User created !", "OK");
+            var result = auth.RegisterAsync(name, email, password, isAdminCheckBox.Checked).GetAwaiter().GetResult();
+            if (result is null)
+            {
+                errorLabel.Text = "Failed to create user. Email may already be in use.";
+                return;
+            }
+
+            MessageBox.Query("Success", $"User '{result.Name}' created.", "OK");
             nav.NavigateTo<HomeView>();
         };
 
         var cancelBtn = new Button
         {
             X = 15,
-            Y = 12,
+            Y = 13,
             Text = "Cancel",
         };
 
@@ -102,6 +148,8 @@ public class AddUserView : BaseView
         frame.Add(
             nameLabel, nameField,
             emailLabel, emailField,
+            passwordLabel, passwordField,
+            isAdminCheckBox,
             errorLabel,
             createBtn, cancelBtn
         );

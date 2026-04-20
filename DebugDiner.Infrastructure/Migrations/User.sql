@@ -1,10 +1,10 @@
-CREATE IF NOT EXISTS TABLE `user`
+CREATE TABLE IF NOT EXISTS `user`
 (
     `id`            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     `name`          TEXT NOT NULL,
     `email`         TEXT NOT NULL,
     `password_hash` TEXT NOT NULL,
-    `role`          TEXT NOT NULL CHECK(`role` IN ('Admin', 'Employee', 'Customer')),
+    `role`          TEXT NOT NULL CHECK(`role` IN ('Admin', 'Employee', 'Customer', 'Manager')),
     `created_at`    TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`    TEXT NULL
 );

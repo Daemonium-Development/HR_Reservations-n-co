@@ -1,3 +1,4 @@
+using DebugDiner.Domain.Abstractions;
 using System.Collections.ObjectModel;
 using DebugDiner.Services;
 using Terminal.Gui;
@@ -6,12 +7,17 @@ namespace DebugDiner;
 
 public class ReservationsView : BaseView
 {
-    public ReservationsView(INavigationService nav, IEnumerable<ReservationEntity> reservations) : base(nav)
+    private readonly List<ReservationEntity> _reservations;
+    public ReservationsView(INavigationService nav, IReservationRepository reservations) : base(nav)
     {
         SetHeaderTitle("Reservations");
         SetContentTitle("Booked Reservations");
+        var all = reservations.GetItemsAsync().GetAwaiter().GetResult();
+        _reservations = (AppState.CurrentUser?.Role == Role.Admin
+            ? all
+            : all.Where(r => r.UserId == AppState.CurrentUser!.Id)).ToList();
 
-        var grouped = reservations
+        var grouped = _reservations
             .GroupBy(r => r.Status)
             .OrderBy(g => g.Key)
             .ToDictionary(g => g.Key, g => g.ToList());
