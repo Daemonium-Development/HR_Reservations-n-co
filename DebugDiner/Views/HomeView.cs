@@ -13,21 +13,40 @@ public class HomeView : BaseView
             "Home",
             "Make a reservation",
             "View reservations",
-            "User information",
-            "Logout"
+            "User information"
         );
+        if (AppState.CurrentUser?.Role == Role.Admin)
+        {
+            SetNavigationItems("Create Dish", "Users", "Add User", "Reservations");
+        }
+        SetNavigationItems("Logout");
 
         NavigationMenu.OpenSelectedItem += (ListViewItemEventArgs e) =>
         {
-            switch (e.Item)
+            switch ((e.Item, AppState.CurrentUser?.Role))
             {
-                case 1:
+                case (0, _):
+                    nav.NavigateTo<HomeView>();
+                    break;
+                case (1, _):
                     nav.NavigateTo<MakeReservationsView>();
                     break;
-                case 3:
+                case (3, _):
                     nav.NavigateTo<InformationView>();
                     break;
-                case 4:
+                case (4, Role.Admin):
+                    nav.NavigateTo<CreateDishView>();
+                    break;
+                case (5, Role.Admin):
+                    // View Users View
+                    break;
+                case (6, Role.Admin):
+                    nav.NavigateTo<AddUserView>();
+                    break;
+                case (7, Role.Admin):
+                    nav.NavigateTo<MakeReservationsView>();
+                    break;
+                case (4, _):
                     AppState.CurrentUser = null;
                     nav.NavigateTo<WelcomeView>();
                     break;

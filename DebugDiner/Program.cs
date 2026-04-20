@@ -62,6 +62,8 @@ internal static class Program
                 services.AddTransient<HomeView>();
                 services.AddTransient<InformationView>();
                 services.AddTransient<MakeReservationsView>();
+                services.AddTransient<AddUserView>();
+                services.AddTransient<CreateDishView>();
             });
 
         var app = builder.Build();
@@ -70,8 +72,8 @@ internal static class Program
         await db.StartAsync();
 
         // NOTE: Uncomment this to create some test admin users
-        // var auth = app.Services.GetRequiredService<IAuthService>();
-        // await auth.RegisterAsync("Soufian", "soufian@gmail.com", "1234", true);
+        var auth = app.Services.GetRequiredService<IAuthService>();
+        await auth.RegisterAsync("Soufian", "soufian@gmail.com", "1234", true);
         // await auth.RegisterAsync("Randy", "randy@gmail.com", "1234", true);
         // await auth.RegisterAsync("Quintin", "quintin@gmail.com", "1234", true);
         // await auth.RegisterAsync("Lars", "lars@gmail.com", "1234", true);

@@ -1,3 +1,4 @@
+using DebugDiner.Services;
 using Terminal.Gui;
 
 namespace DebugDiner;
