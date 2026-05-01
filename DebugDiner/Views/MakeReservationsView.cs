@@ -7,10 +7,14 @@ namespace DebugDiner;
 
 public class MakeReservationsView : BaseView
 {
-    public MakeReservationsView(INavigationService nav, IReservationRepository reservationRepository, ITableRepository tableRepository) : base(nav)
+    public MakeReservationsView(
+        INavigationService nav,
+        IReservationRepository reservationRepository,
+        ITableRepository tableRepository
+    ) : base(nav)
     {
-        SetHeaderTitle("Make Reservations");
-        SetContentTitle("Fill the form to make an reservation");
+        SetHeaderTitle("Make Reservation");
+        SetContentTitle("Select a table and fill in details");
 
         var container = new View
         {
@@ -20,134 +24,112 @@ public class MakeReservationsView : BaseView
             Height = Dim.Fill(),
         };
 
-        var dateLabel = new Label
-        {
-            X = 0,
-            Y = 0,
-            Text = "Date:",
-        };
-
-        dateLabel.GetCurrentHeight(out var dateLabelHeight);
+        var dateLabel = new Label { X = 0, Y = 0, Text = "Date:" };
 
         var dateInput = new DateField
         {
             X = 0,
-            Y = dateLabelHeight + dateLabel.Y,
+            Y = 1,
             Width = Dim.Fill(),
-            Height = Dim.Fill(),
             Date = DateTime.Now
         };
 
-        dateInput.GetCurrentHeight(out var dateInputHeight);
+        var startTimeLabel = new Label { X = 0, Y = 3, Text = "Start Time:" };
 
-        var startTimeLabel = new Label
+        var startTimeInput = new TimeField
         {
             X = 0,
-            Y = (dateInputHeight + dateInput.Y) + 1,
-            Width = Dim.Fill(),
-            Height = Dim.Fill(),
-            Text = "Start Time:",
-        };
-
-        var startTimeInput = new TimeField()
-        {
-            X = 0,
-            Y = startTimeLabel.Y + 1,
+            Y = 4,
             Width = Dim.Fill(),
             Time = DateTime.Now.TimeOfDay
         };
 
-        var endTimeLabel = new Label
-        {
-            X = 0,
-            Y = startTimeInput.Y + 1,
-            Width = Dim.Fill(),
-            Height = Dim.Fill(),
-            Text = "End Time:",
-        };
+        var endTimeLabel = new Label { X = 0, Y = 6, Text = "End Time:" };
 
-        var endTimeInput = new TimeField()
+        var endTimeInput = new TimeField
         {
             X = 0,
-            Y = endTimeLabel.Y + 1,
+            Y = 7,
             Width = Dim.Fill(),
             Time = DateTime.Now.TimeOfDay
         };
 
-        var guestsLabel = new Label
-        {
-            X = 0,
-            Y = endTimeInput.Y + 1,
-            Width = Dim.Fill(),
-            Height = Dim.Fill(),
-            Text = "Amount of guests?:",
-        };
+        var guestsLabel = new Label { X = 0, Y = 9, Text = "Guests:" };
 
         var guestInput = new TextField
         {
             X = 0,
-            Y = guestsLabel.Y + 1,
-            Width = Dim.Fill(),
-            Height = Dim.Fill(),
+            Y = 10,
+            Width = Dim.Fill()
         };
 
         var tables = tableRepository.GetItemsAsync().GetAwaiter().GetResult().ToList();
+        var reservations = reservationRepository.GetItemsAsync().GetAwaiter().GetResult().ToList();
 
-        var tableLabel = new Label
+        var takenTableIds = reservations
+            .Where(r => r.Status == ReservationStatus.Pending ||
+                        r.Status == ReservationStatus.Confirmed)
+            .Select(r => r.TableId)
+            .ToHashSet();
+
+        var tableLabel = new Label { X = 0, Y = 12, Text = "Tables:" };
+
+        var tableItems = tables.Select(t =>
         {
-            X = 0,
-            Y = guestInput.Y + 2,
-            Text = "Table:",
-        };
+            var isTaken = takenTableIds.Contains(t.Id);
 
-        var tableItems = tables
-            .Select(t => $"[{t.Id}] {t.Type} (capacity {t.Capacity})")
-            .ToList();
+            return isTaken
+                ? $"❌ [{t.Id}] {t.Type} (cap {t.Capacity}) - TAKEN"
+                : $"✅ [{t.Id}] {t.Type} (cap {t.Capacity}) - AVAILABLE";
+        }).ToList();
 
         var tableList = new ListView(tableItems)
         {
             X = 0,
-            Y = tableLabel.Y + 1,
+            Y = 13,
             Width = Dim.Fill(),
-            Height = Math.Min(1, Math.Min(tables.Count, 5)),
+            Height = 6
         };
-        tableList.SetSource(new ObservableCollection<string>(tableItems));
+
+        tableList.SelectedItemChanged += e =>
+        {
+            var selectedTable = tables[e.Item];
+
+            if (takenTableIds.Contains(selectedTable.Id))
+            {
+                MessageBox.Query("Unavailable", "This table is already taken.", "OK");
+                tableList.SelectedItem = -1;
+            }
+        };
 
         var submitBtn = new Button
         {
             X = 0,
-            Y = tableList.Y + 1,
-            Width = Dim.Fill(),
-            AutoSize = true,
-            Text = "Make Reservation",
+            Y = 20,
+            Text = "Make Reservation"
         };
 
         submitBtn.Clicked += () =>
         {
-            if (AppState.CurrentUser is null) return;
-
-            if (tableList.SelectedItem < 0 || tableList.SelectedItem >= tables.Count)
-            {
-                // no table selected — optionally show an error label
+            if (AppState.CurrentUser is null)
                 return;
-            }
+
+            if (tableList.SelectedItem < 0)
+                return;
 
             var selectedTable = tables[tableList.SelectedItem];
 
+            if (takenTableIds.Contains(selectedTable.Id))
+                return;
+
             if (!int.TryParse(guestInput.Text.ToString(), out var guests) || guests <= 0)
-            {
-                // invalid guest count — optionally show an error label
                 return;
-            }
 
-            var startDateTime = dateInput.Date.Date + startTimeInput.Time;
-            var endDateTime = dateInput.Date.Date + endTimeInput.Time;
+            var start = dateInput.Date.Date + startTimeInput.Time;
+            var end = dateInput.Date.Date + endTimeInput.Time;
 
-            if (endDateTime <= startDateTime)
-            {
-                // invalid time range — optionally show an error label
+            if (end <= start)
                 return;
-            }
 
             var entity = new ReservationEntity
             {
@@ -155,25 +137,29 @@ public class MakeReservationsView : BaseView
                 CreatedAt = DateTime.UtcNow,
                 UserId = AppState.CurrentUser.Id,
                 TableId = selectedTable.Id,
-                StartTime = startDateTime,
-                EndTime = endDateTime,
+                StartTime = start,
+                EndTime = end,
                 Guests = guests,
-                Status = ReservationStatus.Pending,
+                Status = ReservationStatus.Pending
             };
 
             var result = reservationRepository.Create([entity]).GetAwaiter().GetResult();
+
             if (!result.Any())
-            {
-                // show error
                 return;
-            }
 
             MessageBox.Query("Success", "Reservation created.", "OK");
             nav.NavigateTo<HomeView>();
         };
 
-        container.Add(dateLabel, dateInput, startTimeLabel, startTimeInput, endTimeLabel, endTimeInput,
-            guestsLabel, guestInput, tableLabel, tableList, submitBtn);
+        container.Add(
+            dateLabel, dateInput,
+            startTimeLabel, startTimeInput,
+            endTimeLabel, endTimeInput,
+            guestsLabel, guestInput,
+            tableLabel, tableList,
+            submitBtn
+        );
 
         SetContent(container);
     }
