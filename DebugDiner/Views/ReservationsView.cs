@@ -8,12 +8,24 @@ namespace DebugDiner;
 public class ReservationsView : BaseView
 {
     private readonly List<ReservationEntity> _reservations;
+
     public ReservationsView(INavigationService nav, IReservationRepository reservations) : base(nav)
     {
-        SetHeaderTitle("Reservations");
-        SetContentTitle("Booked Reservations");
+        var isAdmin = AppState.CurrentUser?.Role == Role.Admin;
+
+        SetHeaderTitle(isAdmin
+            ? "Reservations (Admin View)"
+            : "My Reservations,"
+        );
+
+        SetContentTitle(isAdmin
+            ? "All System Reservations"
+            : "My Personal Reservations"
+        );
+
         var all = reservations.GetItemsAsync().GetAwaiter().GetResult();
-        _reservations = (AppState.CurrentUser?.Role == Role.Admin
+
+        _reservations = (isAdmin
             ? all
             : all.Where(r => r.UserId == AppState.CurrentUser!.Id)).ToList();
 
@@ -69,6 +81,7 @@ public class ReservationsView : BaseView
             Width = Dim.Fill(),
             Height = Dim.Fill(),
         };
+
         listView.SetSource(items);
 
         container.Add(columnHeader, listView);
