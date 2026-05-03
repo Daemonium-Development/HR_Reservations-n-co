@@ -98,7 +98,6 @@ public class MakeReservationsView : BaseView
             if (takenTableIds.Contains(selectedTable.Id))
             {
                 MessageBox.Query("Unavailable", "This table is already taken.", "OK");
-                tableList.SelectedItem = -1;
             }
         };
 
