@@ -148,6 +148,17 @@ public class UserRepository(ILogger logger, IDataService data) : IUserRepository
         {
             try
             {
+                var deleteReservationArrangements = data.Connection.CreateCommand();
+                deleteReservationArrangements.CommandText =
+                    "DELETE FROM `reservation_arrangement` WHERE `reservation_id` IN (SELECT `id` FROM `reservation` WHERE `user_id` = @id)";
+                deleteReservationArrangements.Parameters.AddWithValue("@id", user.Id);
+                await deleteReservationArrangements.ExecuteNonQueryAsync();
+
+                var deleteReservations = data.Connection.CreateCommand();
+                deleteReservations.CommandText = "DELETE FROM `reservation` WHERE `user_id` = @id";
+                deleteReservations.Parameters.AddWithValue("@id", user.Id);
+                await deleteReservations.ExecuteNonQueryAsync();
+
                 var command = data.Connection.CreateCommand();
                 command.CommandText = QueryConstants.Delete.Replace("{table}", "`user`");
 
