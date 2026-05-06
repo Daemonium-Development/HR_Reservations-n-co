@@ -1,6 +1,6 @@
+using System.Data;
 using DebugDiner.Domain.Abstractions;
 using DebugDiner.Services;
-using System.Collections.ObjectModel;
 using Terminal.Gui;
 
 namespace DebugDiner;
@@ -92,24 +92,38 @@ public class InformationView : BaseView
             };
             currentY += 1;
 
-            var reservationStrings = new List<string>();
-            foreach (var r in _reservations)
-            {
-                reservationStrings.Add(
-                    $"#{r.Id} | Table {r.TableId} | {r.StartTime:dd-MM-yyyy HH:mm} - {r.EndTime:HH:mm} | {r.Guests} guests | {r.Status}"
-                );
-            }
+            var table = new DataTable();
+            table.Columns.Add("ID");
+            table.Columns.Add("Table");
+            table.Columns.Add("Start Time");
+            table.Columns.Add("End Time");
+            table.Columns.Add("Guests");
+            table.Columns.Add("Status");
 
-            var reservationList = new ListView(reservationStrings)
+            var tableView = new TableView
             {
                 X = 2,
                 Y = currentY,
                 Width = Dim.Fill() - 4,
-                Height = 10
+                Height = Dim.Fill() - currentY - 2,
+                ColorScheme = LayoutView.DefaultColorScheme
             };
-            reservationList.SetSource(new ObservableCollection<string>(reservationStrings));
 
-            frame.Add(reservationsLabel, reservationList);
+            foreach (var r in _reservations)
+            {
+                table.Rows.Add(
+                    r.Id.ToString(),
+                    r.TableId.ToString(),
+                    r.StartTime.ToString("dd-MM-yyyy HH:mm"),
+                    r.EndTime.ToString("dd-MM-yyyy HH:mm"),
+                    r.Guests.ToString(),
+                    r.Status.ToString()
+                );
+            }
+
+            tableView.Table = table;
+
+            frame.Add(reservationsLabel, tableView);
         }
         else
         {

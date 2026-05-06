@@ -1,5 +1,5 @@
+using System.Data;
 using DebugDiner.Domain.Abstractions;
-using System.Collections.ObjectModel;
 using DebugDiner.Services;
 using Terminal.Gui;
 
@@ -15,7 +15,7 @@ public class ReservationsView : BaseView
 
         SetHeaderTitle(isAdmin
             ? "Reservations (Admin View)"
-            : "My Reservations,"
+            : "My Reservations"
         );
 
         SetContentTitle(isAdmin
@@ -60,31 +60,42 @@ public class ReservationsView : BaseView
             Height = Dim.Fill(),
         };
 
-        var columnHeader = new Label
+        var countLabel = new Label(5, 1, $"Total: {reservations.Count} reservations");
+
+        var table = new DataTable();
+        table.Columns.Add("ID");
+        table.Columns.Add("User");
+        table.Columns.Add("Table");
+        table.Columns.Add("Start Time");
+        table.Columns.Add("End Time");
+        table.Columns.Add("Guests");
+        table.Columns.Add("Status");
+
+        var tableView = new TableView
         {
-            X = 0,
-            Y = 0,
-            Width = Dim.Fill(),
-            Text = $"{"ID",-5} {"User",-7} {"Table",-7} {"Start",-20} {"End",-20} {"Guests",-8} {"Status",-12}",
+            X = 5,
+            Y = 3,
+            Width = Dim.Fill() - 10,
+            Height = Dim.Fill() - 6,
+            ColorScheme = LayoutView.DefaultColorScheme
         };
 
-        var items = new ObservableCollection<string>(
-            reservations.Select(r =>
-                $"{r.Id,-5} {r.UserId,-7} {r.TableId,-7} {r.StartTime,-20:dd-MM-yyyy HH:mm} {r.EndTime,-20:dd-MM-yyyy HH:mm} {r.Guests,-8} {r.Status,-12}"
-            )
-        );
-
-        var listView = new ListView
+        foreach (var r in reservations)
         {
-            X = 0,
-            Y = 1,
-            Width = Dim.Fill(),
-            Height = Dim.Fill(),
-        };
+            table.Rows.Add(
+                r.Id.ToString(),
+                r.UserId.ToString(),
+                r.TableId.ToString(),
+                r.StartTime.ToString("dd-MM-yyyy HH:mm"),
+                r.EndTime.ToString("dd-MM-yyyy HH:mm"),
+                r.Guests.ToString(),
+                r.Status.ToString()
+            );
+        }
 
-        listView.SetSource(items);
+        tableView.Table = table;
 
-        container.Add(columnHeader, listView);
+        container.Add(countLabel, tableView);
 
         return new TabView.Tab(title, container);
     }
