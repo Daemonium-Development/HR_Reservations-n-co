@@ -6,17 +6,16 @@ namespace DebugDiner;
 
 public class DeleteReservationView : BaseView
 {
-    public DeleteReservationView(INavigationService nav, IReservationRepository reservationRepository)
-        : base(nav)
+    public DeleteReservationView(INavigationService nav, IReservationRepository repo) : base(nav)
     {
-        SetHeaderTitle("Debug Diner | Reservations");
+        SetHeaderTitle("Debug Diner | Delete Reservation");
         SetContentTitle("Delete Reservation");
 
         var reservation = AppState.SelectedReservation;
 
         if (reservation is null)
         {
-            nav.NavigateTo<ReservationsView>();
+            nav.NavigateBack();
             return;
         }
 
@@ -25,66 +24,40 @@ public class DeleteReservationView : BaseView
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
-            Height = Dim.Fill(),
+            Height = Dim.Fill()
         };
 
-        var question = new Label
+        var label = new Label($"Delete reservation #{reservation.Id}?")
         {
             X = Pos.Center(),
-            Y = 5,
-            Text = "Are you sure you want to delete this reservation?"
+            Y = 5
         };
 
-        var info = new Label
+        var yes = new Button("Yes")
         {
-            X = Pos.Center(),
-            Y = 7,
-            Text = $"Reservation #{reservation.Id}"
+            X = Pos.Center() - 10,
+            Y = 7
         };
 
-        var yesBtn = new Button
+        var no = new Button("No")
         {
-            X = 5,
-            Y = 10,
-            Text = "Yes"
+            X = Pos.Center() + 2,
+            Y = 7
         };
 
-        var noBtn = new Button
+        yes.Clicked += () =>
         {
-            X = Pos.Right(yesBtn) + 5,
-            Y = 10,
-            Text = "No"
+            repo.Delete([reservation]).GetAwaiter().GetResult();
+
+            AppState.SelectedReservation = null;
+
+            // ✅ FIX: return correctly (no broken back stack)
+            nav.NavigateBack();
         };
 
-        yesBtn.Clicked += () =>
-        {
-            try
-            {
-                reservationRepository.Delete([reservation]).GetAwaiter().GetResult();
+        no.Clicked += () => nav.NavigateBack();
 
-                AppState.SelectedReservation = null;
-
-                nav.NavigateTo<ReservationsView>();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", $"Failed to delete: {ex.Message}", "OK");
-            }
-        };
-
-        noBtn.Clicked += () =>
-        {
-            nav.NavigateTo<ReservationsView>();
-        };
-
-        yesBtn.CanFocus = true;
-        noBtn.CanFocus = true;
-
-        container.Add(question, info, yesBtn, noBtn);
-
+        container.Add(label, yes, no);
         SetContent(container);
-
-        container.SetFocus();
-        yesBtn.SetFocus();
     }
 }

@@ -6,16 +6,16 @@ namespace DebugDiner;
 
 public class UpdateReservationView : BaseView
 {
-    public UpdateReservationView(INavigationService nav, IReservationRepository reservationRepository) : base(nav)
+    public UpdateReservationView(INavigationService nav, IReservationRepository repo) : base(nav)
     {
-        SetHeaderTitle("Debug Diner | Reservations");
+        SetHeaderTitle("Debug Diner | Update Reservation");
         SetContentTitle("Update Reservation");
 
         var reservation = AppState.SelectedReservation;
 
         if (reservation is null)
         {
-            nav.NavigateTo<ReservationsView>();
+            nav.NavigateBack();
             return;
         }
 
@@ -24,61 +24,84 @@ public class UpdateReservationView : BaseView
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
-            Height = Dim.Fill(),
+            Height = Dim.Fill()
         };
 
-        var guestsLabel = new Label { X = 0, Y = 0, Text = "Guests:" };
-        var guestsInput = new TextField { X = 0, Y = 1, Width = Dim.Fill(), Text = reservation.Guests.ToString() };
-
-        var startLabel = new Label { X = 0, Y = 3, Text = "Start Time:" };
-        var startInput = new TextField { X = 0, Y = 4, Width = Dim.Fill(), Text = reservation.StartTime.ToString() };
-
-        var endLabel = new Label { X = 0, Y = 6, Text = "End Time:" };
-        var endInput = new TextField { X = 0, Y = 7, Width = Dim.Fill(), Text = reservation.EndTime.ToString() };
-
-        var submitBtn = new Button
+        var guestsLabel = new Label("Guests:")
         {
-            X = 0,
+            X = 2,
+            Y = 2
+        };
+
+        var guestsInput = new TextField(reservation.Guests.ToString())
+        {
+            X = 2,
+            Y = 3,
+            Width = 20
+        };
+
+        var startLabel = new Label("Start time:")
+        {
+            X = 2,
+            Y = 5
+        };
+
+        var startInput = new TextField(reservation.StartTime.ToString("yyyy-MM-dd HH:mm"))
+        {
+            X = 2,
+            Y = 6,
+            Width = 30
+        };
+
+        // ✅ FIX: ADD END TIME FIELD
+        var endLabel = new Label("End time:")
+        {
+            X = 2,
+            Y = 8
+        };
+
+        var endInput = new TextField(reservation.EndTime.ToString("yyyy-MM-dd HH:mm"))
+        {
+            X = 2,
             Y = 9,
-            Text = "Update Reservation",
+            Width = 30
         };
 
-        submitBtn.Clicked += () =>
+        var saveBtn = new Button("Save")
         {
-            try
+            X = 2,
+            Y = 11
+        };
+
+        saveBtn.Clicked += () =>
+        {
+            if (int.TryParse(guestsInput.Text.ToString(), out var guests))
             {
-                if (int.TryParse(guestsInput.Text.ToString(), out var guests))
-                {
-                    reservation.Guests = guests;
-                }
-
-                if (DateTime.TryParse(startInput.Text.ToString(), out var start))
-                {
-                    reservation.StartTime = start;
-                }
-
-                if (DateTime.TryParse(endInput.Text.ToString(), out var end))
-                {
-                    reservation.EndTime = end;
-                }
-
-                reservation.UpdatedAt = DateTime.UtcNow;
-
-                reservationRepository.Update([reservation]).GetAwaiter().GetResult();
-
-                nav.NavigateTo<ReservationsView>();
+                reservation.Guests = guests;
             }
-            catch (Exception ex)
+
+            if (DateTime.TryParse(startInput.Text.ToString(), out var start))
             {
-                MessageBox.ErrorQuery("Error", $"Failed to update reservation: {ex.Message}", "OK");
+                reservation.StartTime = start;
             }
+
+            if (DateTime.TryParse(endInput.Text.ToString(), out var end))
+            {
+                reservation.EndTime = end;
+            }
+
+            repo.Update([reservation]).GetAwaiter().GetResult();
+
+            AppState.SelectedReservation = null;
+
+            nav.NavigateBack();
         };
 
         container.Add(
             guestsLabel, guestsInput,
             startLabel, startInput,
             endLabel, endInput,
-            submitBtn
+            saveBtn
         );
 
         SetContent(container);
