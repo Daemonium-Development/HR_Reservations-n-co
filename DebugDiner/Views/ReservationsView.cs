@@ -72,13 +72,19 @@ public class ReservationsView : BaseView
             Height = Dim.Fill(),
         };
 
-        var columnHeader = new Label
+        var header = new Label
         {
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
             Text = $"{"ID",-5} {"User",-7} {"Table",-7} {"Start",-20} {"End",-20} {"Guests",-8} {"Status",-12}",
         };
+
+        var items = new ObservableCollection<string>(
+            reservations.Select(r =>
+                $"{r.Id,-5} {r.UserId,-7} {r.TableId,-7} {r.StartTime,-20:dd-MM-yyyy HH:mm} {r.EndTime,-20:dd-MM-yyyy HH:mm} {r.Guests,-8} {r.Status,-12}"
+            )
+        );
 
         var listView = new ListView
         {
@@ -88,61 +94,41 @@ public class ReservationsView : BaseView
             Height = Dim.Fill(),
         };
 
-        var displayItems = reservations
-            .Select(r =>
-                $"{r.Id,-5} {r.UserId,-7} {r.TableId,-7} {r.StartTime,-20:dd-MM-yyyy HH:mm} {r.EndTime,-20:dd-MM-yyyy HH:mm} {r.Guests,-8} {r.Status,-12}"
-            )
-            .ToList();
-
-        listView.SetSource(new ObservableCollection<string>(displayItems));
-
-        listView.SetFocus();
+        listView.SetSource(items);
 
         listView.KeyPress += e =>
         {
-            if (e.KeyEvent.Key == Key.Enter)
+            if (e.KeyEvent.Key != Key.Enter) return;
+
+            var index = listView.SelectedItem;
+
+            if (index < 0 || index >= reservations.Count) return;
+
+            var reservation = reservations[index];
+
+            AppState.SelectedReservation = reservation;
+
+            var action = MessageBox.Query(
+                "Reservation",
+                "What do you want to do?",
+                "Edit",
+                "Delete",
+                "Cancel"
+            );
+
+            if (action == 0)
             {
-                var index = listView.SelectedItem;
-
-                if (index < 0 || index >= displayItems.Count)
-                    return;
-
-                // 🔥 FIX: extract ID instead of using index
-                var selectedLine = displayItems[index];
-                var idText = selectedLine.Split(' ', StringSplitOptions.RemoveEmptyEntries)[0];
-
-                if (!int.TryParse(idText, out var id))
-                    return;
-
-                var reservation = reservations.FirstOrDefault(r => r.Id == id);
-
-                if (reservation is null)
-                    return;
-
-                AppState.SelectedReservation = reservation;
-
-                var action = MessageBox.Query(
-                    "Reservation",
-                    "What do you want to do?",
-                    "Edit",
-                    "Delete",
-                    "Cancel"
-                );
-
-                if (action == 0)
-                {
-                    nav.NavigateTo<UpdateReservationView>();
-                }
-                else if (action == 1)
-                {
-                    nav.NavigateTo<DeleteReservationView>();
-                }
-
-                e.Handled = true;
+                nav.NavigateTo<UpdateReservationView>();
             }
+            else if (action == 1)
+            {
+                nav.NavigateTo<DeleteReservationView>();
+            }
+
+            e.Handled = true;
         };
 
-        container.Add(columnHeader, listView);
+        container.Add(header, listView);
 
         return new TabView.Tab(title, container);
     }

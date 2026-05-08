@@ -6,7 +6,8 @@ namespace DebugDiner;
 
 public class DeleteReservationView : BaseView
 {
-    public DeleteReservationView(INavigationService nav, IReservationRepository reservationRepository) : base(nav)
+    public DeleteReservationView(INavigationService nav, IReservationRepository reservationRepository)
+        : base(nav)
     {
         SetHeaderTitle("Debug Diner | Reservations");
         SetContentTitle("Delete Reservation");
@@ -27,25 +28,32 @@ public class DeleteReservationView : BaseView
             Height = Dim.Fill(),
         };
 
-        var questionLabel = new Label
+        var question = new Label
         {
             X = Pos.Center(),
             Y = 5,
-            Text = "Are you sure you want to delete this reservation?",
+            Text = "Are you sure you want to delete this reservation?"
         };
 
-        var infoLabel = new Label
+        var info = new Label
         {
             X = Pos.Center(),
             Y = 7,
-            Text = $"Reservation ID: {reservation.Id}",
+            Text = $"Reservation #{reservation.Id}"
         };
 
         var yesBtn = new Button
         {
             X = 5,
             Y = 10,
-            Text = "Yes, delete",
+            Text = "Yes"
+        };
+
+        var noBtn = new Button
+        {
+            X = Pos.Right(yesBtn) + 5,
+            Y = 10,
+            Text = "No"
         };
 
         yesBtn.Clicked += () =>
@@ -53,25 +61,32 @@ public class DeleteReservationView : BaseView
             try
             {
                 reservationRepository.Delete([reservation]).GetAwaiter().GetResult();
+
+                // ✔ clear state FIRST
+                AppState.SelectedReservation = null;
+
+                // ✔ normal navigation only
                 nav.NavigateTo<ReservationsView>();
             }
             catch (Exception ex)
             {
-                MessageBox.ErrorQuery("Error", $"Failed to delete reservation: {ex.Message}", "OK");
+                MessageBox.ErrorQuery("Error", $"Failed to delete: {ex.Message}", "OK");
             }
         };
 
-        var noBtn = new Button
+        noBtn.Clicked += () =>
         {
-            X = Pos.Right(yesBtn) + 5,
-            Y = 10,
-            Text = "No, go back",
+            nav.NavigateTo<ReservationsView>();
         };
 
-        noBtn.Clicked += () => nav.NavigateTo<ReservationsView>();
+        yesBtn.CanFocus = true;
+        noBtn.CanFocus = true;
 
-        container.Add(questionLabel, infoLabel, yesBtn, noBtn);
+        container.Add(question, info, yesBtn, noBtn);
 
         SetContent(container);
+
+        container.SetFocus();
+        yesBtn.SetFocus();
     }
 }

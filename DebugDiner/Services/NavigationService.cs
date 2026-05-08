@@ -14,41 +14,44 @@ public class NavigationService(IServiceProvider services) : INavigationService
         _contentArea = contentArea;
     }
 
-    public void NavigateTo<TView>()
-        where TView : View
+    public void NavigateTo<TView>() where TView : View
     {
-        if (_contentArea is null)
-        {
-            return;
-        }
+        if (_contentArea is null) return;
 
         if (_currentViewType is not null)
         {
             _history.Push(_currentViewType);
         }
+
         _currentViewType = typeof(TView);
 
-        SwapContent(services.GetRequiredService<TView>());
+        var view = services.GetRequiredService<TView>();
+
+        SwapContent(view);
     }
 
     public void NavigateBack()
     {
         if (_contentArea is null || _history.Count == 0)
-        {
             return;
-        }
 
         _currentViewType = _history.Pop();
 
         var view = (View)services.GetRequiredService(_currentViewType);
+
         SwapContent(view);
     }
 
     private void SwapContent(View view)
     {
-        foreach (var sub in _contentArea!.Subviews.ToList())
+        if (_contentArea is null) return;
+
+        // 🔥 SAFE SWAP: remove only active content
+        var oldContent = _contentArea.Subviews.FirstOrDefault();
+
+        if (oldContent != null)
         {
-            _contentArea.Remove(sub);
+            _contentArea.Remove(oldContent);
         }
 
         view.X = 0;
@@ -57,6 +60,8 @@ public class NavigationService(IServiceProvider services) : INavigationService
         view.Height = Dim.Fill();
 
         _contentArea.Add(view);
+
+        // Terminal.Gui handles redraw internally
         _contentArea.SetNeedsDisplay();
     }
 }
