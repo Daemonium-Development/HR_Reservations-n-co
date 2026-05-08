@@ -7,7 +7,7 @@ namespace DebugDiner;
 
 public class ReservationsView : BaseView
 {
-    private readonly List<ReservationEntity> _reservations;
+    private readonly List<ReservationEntity> _reservations = new();
 
     public ReservationsView(INavigationService nav, IReservationRepository reservations) : base(nav)
     {
@@ -15,7 +15,7 @@ public class ReservationsView : BaseView
 
         SetHeaderTitle(isAdmin
             ? "Reservations (Admin View)"
-            : "My Reservations,"
+            : "My Reservations"
         );
 
         SetContentTitle(isAdmin
@@ -23,11 +23,7 @@ public class ReservationsView : BaseView
             : "My Personal Reservations"
         );
 
-        var all = reservations.GetItemsAsync().GetAwaiter().GetResult();
-
-        _reservations = (isAdmin
-            ? all
-            : all.Where(r => r.UserId == AppState.CurrentUser!.Id)).ToList();
+        LoadData(reservations, isAdmin);
 
         var grouped = _reservations
             .GroupBy(r => r.Status)
@@ -44,13 +40,29 @@ public class ReservationsView : BaseView
 
         foreach (var (status, filtered) in grouped)
         {
-            tabView.AddTab(CreateTab(status.ToString(), filtered), false);
+            tabView.AddTab(CreateTab(status.ToString(), filtered, nav), false);
         }
 
         SetContent(tabView);
     }
 
-    private static TabView.Tab CreateTab(string title, List<ReservationEntity> reservations)
+    private void LoadData(IReservationRepository reservations, bool isAdmin)
+    {
+        var all = reservations.GetItemsAsync().GetAwaiter().GetResult();
+
+        _reservations.Clear();
+
+        _reservations.AddRange(
+            isAdmin
+                ? all
+                : all.Where(r => r.UserId == AppState.CurrentUser!.Id)
+        );
+    }
+
+    private static TabView.Tab CreateTab(
+        string title,
+        List<ReservationEntity> reservations,
+        INavigationService nav)
     {
         var container = new View
         {
@@ -68,12 +80,6 @@ public class ReservationsView : BaseView
             Text = $"{"ID",-5} {"User",-7} {"Table",-7} {"Start",-20} {"End",-20} {"Guests",-8} {"Status",-12}",
         };
 
-        var items = new ObservableCollection<string>(
-            reservations.Select(r =>
-                $"{r.Id,-5} {r.UserId,-7} {r.TableId,-7} {r.StartTime,-20:dd-MM-yyyy HH:mm} {r.EndTime,-20:dd-MM-yyyy HH:mm} {r.Guests,-8} {r.Status,-12}"
-            )
-        );
-
         var listView = new ListView
         {
             X = 0,
@@ -82,7 +88,59 @@ public class ReservationsView : BaseView
             Height = Dim.Fill(),
         };
 
-        listView.SetSource(items);
+        var displayItems = reservations
+            .Select(r =>
+                $"{r.Id,-5} {r.UserId,-7} {r.TableId,-7} {r.StartTime,-20:dd-MM-yyyy HH:mm} {r.EndTime,-20:dd-MM-yyyy HH:mm} {r.Guests,-8} {r.Status,-12}"
+            )
+            .ToList();
+
+        listView.SetSource(new ObservableCollection<string>(displayItems));
+
+        listView.SetFocus();
+
+        listView.KeyPress += e =>
+        {
+            if (e.KeyEvent.Key == Key.Enter)
+            {
+                var index = listView.SelectedItem;
+
+                if (index < 0 || index >= displayItems.Count)
+                    return;
+
+                // 🔥 FIX: extract ID instead of using index
+                var selectedLine = displayItems[index];
+                var idText = selectedLine.Split(' ', StringSplitOptions.RemoveEmptyEntries)[0];
+
+                if (!int.TryParse(idText, out var id))
+                    return;
+
+                var reservation = reservations.FirstOrDefault(r => r.Id == id);
+
+                if (reservation is null)
+                    return;
+
+                AppState.SelectedReservation = reservation;
+
+                var action = MessageBox.Query(
+                    "Reservation",
+                    "What do you want to do?",
+                    "Edit",
+                    "Delete",
+                    "Cancel"
+                );
+
+                if (action == 0)
+                {
+                    nav.NavigateTo<UpdateReservationView>();
+                }
+                else if (action == 1)
+                {
+                    nav.NavigateTo<DeleteReservationView>();
+                }
+
+                e.Handled = true;
+            }
+        };
 
         container.Add(columnHeader, listView);
 
