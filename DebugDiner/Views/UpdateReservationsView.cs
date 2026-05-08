@@ -47,13 +47,11 @@ public class UpdateReservationView : BaseView
         {
             try
             {
-                // ✔ guests
                 if (int.TryParse(guestsInput.Text.ToString(), out var guests))
                 {
                     reservation.Guests = guests;
                 }
 
-                // ✔ FIX: time parsing
                 if (DateTime.TryParse(startInput.Text.ToString(), out var start))
                 {
                     reservation.StartTime = start;

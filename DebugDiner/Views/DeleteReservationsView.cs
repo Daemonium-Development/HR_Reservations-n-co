@@ -62,10 +62,8 @@ public class DeleteReservationView : BaseView
             {
                 reservationRepository.Delete([reservation]).GetAwaiter().GetResult();
 
-                // ✔ clear state FIRST
                 AppState.SelectedReservation = null;
 
-                // ✔ normal navigation only
                 nav.NavigateTo<ReservationsView>();
             }
             catch (Exception ex)

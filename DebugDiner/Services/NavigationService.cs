@@ -46,7 +46,6 @@ public class NavigationService(IServiceProvider services) : INavigationService
     {
         if (_contentArea is null) return;
 
-        // 🔥 SAFE SWAP: remove only active content
         var oldContent = _contentArea.Subviews.FirstOrDefault();
 
         if (oldContent != null)
@@ -61,7 +60,6 @@ public class NavigationService(IServiceProvider services) : INavigationService
 
         _contentArea.Add(view);
 
-        // Terminal.Gui handles redraw internally
         _contentArea.SetNeedsDisplay();
     }
 }
