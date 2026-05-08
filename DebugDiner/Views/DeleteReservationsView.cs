@@ -51,7 +51,6 @@ public class DeleteReservationView : BaseView
 
             AppState.SelectedReservation = null;
 
-            // ✅ FIX: return correctly (no broken back stack)
             nav.NavigateBack();
         };
 
