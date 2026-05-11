@@ -34,7 +34,9 @@ public class NavigationService(IServiceProvider services) : INavigationService
     public void NavigateBack()
     {
         if (_contentArea is null || _history.Count == 0)
+        {
             return;
+        }
 
         _currentViewType = _history.Pop();
 
