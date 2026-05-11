@@ -4,37 +4,34 @@ namespace DebugDiner.Services;
 
 public class NavigationRegistry
 {
-    private static List<string> _baseItems = ["Home", "Logout"];
     private static readonly Dictionary<Type, Func<IEnumerable<string>>> _registry = new()
     {
-        [typeof(AddUserView)] = () => BuildItems(["Users"]).ToArray(),
+        [typeof(AddUserView)] = () => ["Home", "Users", "Logout"],
 
-        [typeof(CreateDishView)] = () => BuildItems([]).ToArray(),
+        [typeof(CreateDishView)] = () => ["Home", "Logout"],
 
         [typeof(HomeView)] = () =>
         {
-            var items = BuildItems(["Make a Reservation", "View my Reservations", "User Information"]).ToList();
+            var items = new List<string>() { "Home", "Make a Reservation", "View my Reservations", "User Information" };
             if (AppState.CurrentUser?.Role == Role.Admin)
             {
-                items.Insert(items.Count - 2, "Create Dish");
-                items.Insert(items.Count - 2, "Users");
-                items.Insert(items.Count - 2, "Add User");
-                items.Insert(items.Count - 2, "Admin Reservations");
+                items.AddRange(["Create Dish", "Users", "Add User", "Admin Reservations"]);
             }
 
+            items.Add("Logout");
             return items;
         },
 
-        [typeof(InformationView)] = () => BuildItems(["View Reservation(s)"]).ToArray(),
+        [typeof(InformationView)] = () => ["Home", "View Reservation(s)", "Logout"],
 
         [typeof(LoginView)]   = () => [],
         [typeof(WelcomeView)] = () => [],
 
-        [typeof(DeleteUserView)]       = () => BuildItems([]),
-        [typeof(MakeReservationsView)] = () => BuildItems([]),
-        [typeof(AdminUsersView)]       = () => BuildItems([]),
-        [typeof(ReservationsView)]     = () => BuildItems([]),
-        [typeof(UpdateUserView)]       = () => BuildItems([])
+        [typeof(DeleteUserView)]       = () => [],
+        [typeof(MakeReservationsView)] = () => [],
+        [typeof(AdminUsersView)]       = () => [],
+        [typeof(ReservationsView)]     = () => [],
+        [typeof(UpdateUserView)]       = () => []
         ,
     };
 
@@ -45,15 +42,4 @@ public class NavigationRegistry
 
     public static IEnumerable<string> GetItemsFor<TView>() where TView : View =>
         GetItemsFor(typeof(TView));
-
-    private static IEnumerable<string> BuildItems(IEnumerable<string> items)
-    {
-        var pre = _baseItems;
-        foreach (var item in items)
-        {
-            pre.Insert(1, item);
-        }
-
-        return pre;
-    }
 }

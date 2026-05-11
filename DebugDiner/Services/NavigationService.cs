@@ -18,7 +18,10 @@ public class NavigationService(IServiceProvider services) : INavigationService
 
     public void NavigateTo<TView>() where TView : View
     {
-        if (_contentArea is null) return;
+        if (_contentArea is null)
+        {
+            return;
+        }
 
         if (_currentViewType is not null)
         {
@@ -48,7 +51,10 @@ public class NavigationService(IServiceProvider services) : INavigationService
 
     private void SwapContent(View view)
     {
-        if (_contentArea is null) return;
+        if (_contentArea is null)
+        {
+            return;
+        }
 
         var oldContent = _contentArea.Subviews.FirstOrDefault();
 
