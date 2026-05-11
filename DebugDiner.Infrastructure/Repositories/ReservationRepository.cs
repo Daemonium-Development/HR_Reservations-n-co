@@ -14,7 +14,9 @@ public class ReservationRepository(ILogger logger, IDataService data) : IReserva
             logger.Error("Database connection is null.");
             return [];
         }
+
         var command = data.Connection.CreateCommand();
+
         if (ids is null)
         {
             command.CommandText = QueryConstants.GetAll.Replace("{table}", "`reservation`");
@@ -25,9 +27,11 @@ public class ReservationRepository(ILogger logger, IDataService data) : IReserva
                 .Replace("{table}", "`reservation`")
                 .Replace("{values}", string.Join(",", ids));
         }
+
         var reader = await command.ExecuteReaderAsync();
 
         var reservations = new List<ReservationEntity>();
+
         while (reader.Read())
         {
             reservations.Add(new ReservationEntity
@@ -59,12 +63,13 @@ public class ReservationRepository(ILogger logger, IDataService data) : IReserva
         string[] values = ["@userId", "@tableId", "@startTime", "@endTime", "@guests", "@status"];
 
         var ids = new List<long>();
-        foreach (var reservation in reservations.AsEnumerable())
+
+        foreach (var reservation in reservations)
         {
-            long newId = 0;
             try
             {
                 var command = data.Connection.CreateCommand();
+
                 command.CommandText = QueryConstants.Insert
                     .Replace("{table}", "`reservation`")
                     .Replace("{columns}", string.Join(",", columns))
@@ -79,18 +84,13 @@ public class ReservationRepository(ILogger logger, IDataService data) : IReserva
 
                 var result = await command.ExecuteScalarAsync();
 
-                if (result is null)
-                    continue;
-                newId = (long)result;
-
-                logger.Debug("Reservation with id {Id} created.", newId);
+                if (result is not null)
+                    ids.Add((long)result);
             }
             catch (SqliteException e)
             {
-                logger.Error(e, "Error creating reservation with id {Id}", reservation.Id);
-                continue;
+                logger.Error(e, "Error creating reservation");
             }
-            ids.Add(newId);
         }
 
         return await GetItemsAsync(ids.Select(id => (int)id));
@@ -105,14 +105,23 @@ public class ReservationRepository(ILogger logger, IDataService data) : IReserva
         }
 
         var ids = new List<long>();
-        foreach (var reservation in reservations.AsEnumerable())
+
+        foreach (var reservation in reservations)
         {
             try
             {
                 var command = data.Connection.CreateCommand();
+
                 command.CommandText = QueryConstants.Update
                     .Replace("{table}", "`reservation`")
-                    .Replace("{columns}", string.Join(",", ["user_id = @userId", "table_id = @tableId", "start_time = @startTime", "end_time = @endTime", "guests = @guests", "status = @status"]));
+                    .Replace("{columns}", string.Join(",", [
+                        "user_id = @userId",
+                        "table_id = @tableId",
+                        "start_time = @startTime",
+                        "end_time = @endTime",
+                        "guests = @guests",
+                        "status = @status"
+                    ]));
 
                 command.Parameters.AddWithValue("@id", reservation.Id);
                 command.Parameters.AddWithValue("@userId", reservation.UserId);
@@ -122,20 +131,14 @@ public class ReservationRepository(ILogger logger, IDataService data) : IReserva
                 command.Parameters.AddWithValue("@guests", reservation.Guests);
                 command.Parameters.AddWithValue("@status", reservation.Status.ToString());
 
-                var result = await command.ExecuteScalarAsync();
+                await command.ExecuteNonQueryAsync();
 
-                if (result is null)
-                    continue;
-                var updated = (long)result;
-
-                logger.Debug("Reservation with id {Id} updated.", updated);
+                ids.Add(reservation.Id);
             }
             catch (SqliteException e)
             {
-                logger.Error(e, "Error updating reservation with id {Id}", reservation.Id);
-                continue;
+                logger.Error(e, "Error updating reservation {Id}", reservation.Id);
             }
-            ids.Add(reservation.Id);
         }
 
         return await GetItemsAsync(ids.Select(id => (int)id));
@@ -150,24 +153,31 @@ public class ReservationRepository(ILogger logger, IDataService data) : IReserva
         }
 
         var deleted = 0;
-        foreach (var reservation in reservations.AsEnumerable())
+
+        foreach (var reservation in reservations)
         {
             try
             {
-                var command = data.Connection.CreateCommand();
-                command.CommandText = QueryConstants.Delete.Replace("{table}", "`reservation`");
+                var deleteArrangements = data.Connection.CreateCommand();
+                deleteArrangements.CommandText =
+                    "DELETE FROM `reservation_arrangement` WHERE `reservation_id` = @id";
+                deleteArrangements.Parameters.AddWithValue("@id", reservation.Id);
+                await deleteArrangements.ExecuteNonQueryAsync();
 
-                command.Parameters.AddWithValue("@id", reservation.Id);
-                await command.ExecuteNonQueryAsync();
+                var deleteReservation = data.Connection.CreateCommand();
+                deleteReservation.CommandText =
+                    "DELETE FROM `reservation` WHERE `id` = @id";
+                deleteReservation.Parameters.AddWithValue("@id", reservation.Id);
+                await deleteReservation.ExecuteNonQueryAsync();
 
-                logger.Debug("Reservation with id {Id} deleted.", reservation.Id);
+                logger.Debug("Reservation {Id} fully deleted (including relations).", reservation.Id);
+
+                deleted++;
             }
             catch (SqliteException e)
             {
-                logger.Error(e, "Error deleting reservation with id {Id}", reservation.Id);
-                continue;
+                logger.Error(e, "Error deleting reservation {Id}", reservation.Id);
             }
-            deleted++;
         }
 
         return deleted;

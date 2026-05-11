@@ -9,17 +9,6 @@ public class HomeView : BaseView
     {
         SetHeaderTitle("Debug Diner | Home");
         SetContentTitle("Home");
-        SetNavigationItems(
-            "Home",
-            "Make a reservation",
-            "View reservations",
-            "User information"
-        );
-        if (AppState.CurrentUser?.Role == Role.Admin)
-        {
-            SetNavigationItems("Create Dish", "Users", "Add User", "Reservations");
-        }
-        SetNavigationItems("Logout");
 
         NavigationMenu.OpenSelectedItem += (ListViewItemEventArgs e) =>
         {

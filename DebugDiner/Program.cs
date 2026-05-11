@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Events;
-using Terminal.Gui;
+using System.Globalization;
 
 namespace DebugDiner;
 
@@ -16,9 +16,10 @@ internal static class Program
     internal static async Task<int> Main(string[] args)
     {
         var special = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs", "debug-diner.log");
+        // var logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs", "debug-diner.log");
         // NOTE: If on mac, replace this with the line above
-        // var logFilePath = Path.Combine(special, "Debug Diner", "logs", "debug-diner.log");
+        var logFilePath = Path.Combine(special, "Debug Diner", "logs", "debug-diner.log");
+
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel
             .Debug()
@@ -68,30 +69,43 @@ internal static class Program
                 services.AddTransient<DeleteUserView>();
                 services.AddTransient<AddUserView>();
                 services.AddTransient<CreateDishView>();
+                services.AddTransient<UpdateReservationView>();
+                services.AddTransient<DeleteReservationView>();
             });
 
         var app = builder.Build();
 
         var db = app.Services.GetRequiredService<IDataService>();
-        await db.StartAsync();
+        var logger = app.Services.GetRequiredService<ILogger>();
+        try
+        {
+            await db.StartAsync();
 
-        // NOTE: Uncomment this to create some test admin users
-        var auth = app.Services.GetRequiredService<IAuthService>();
-        await auth.RegisterAsync("Soufian", "soufian@gmail.com", "1234", true);
-        // await auth.RegisterAsync("Randy", "randy@gmail.com", "1234", true);
-        // await auth.RegisterAsync("Quintin", "quintin@gmail.com", "1234", true);
-        // await auth.RegisterAsync("Lars", "lars@gmail.com", "1234", true);
+            // NOTE: Uncomment this to create some test admin users
+            var auth = app.Services.GetRequiredService<IAuthService>();
+            await auth.RegisterAsync("Soufian", "soufian@gmail.com", "1234", true);
+            // await auth.RegisterAsync("Randy", "randy@gmail.com", "1234", true);
+            // await auth.RegisterAsync("Quintin", "quintin@gmail.com", "1234", true);
+            // await auth.RegisterAsync("Lars", "lars@gmail.com", "1234", true);
 
-        Terminal.Gui.Application.Init();
+            CultureInfo.CurrentCulture = new CultureInfo("nl-NL");
 
-        DisableMouseTracking();
+            Terminal.Gui.Application.Init();
 
-        var nav = app.Services.GetRequiredService<INavigationService>();
-        nav.SetContentArea(Terminal.Gui.Application.Top!);
-        nav.NavigateTo<WelcomeView>();
-        Terminal.Gui.Application.Run();
+            DisableMouseTracking();
 
-        return 0;
+            var nav = app.Services.GetRequiredService<INavigationService>();
+            nav.SetContentArea(Terminal.Gui.Application.Top!);
+            nav.NavigateTo<WelcomeView>();
+            Terminal.Gui.Application.Run();
+            logger.Information("Application finished.");
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            logger.Fatal(ex, "Application failed to start.");
+            return ex.HResult;
+        }
     }
 
     private static void DisableMouseTracking()

@@ -10,21 +10,19 @@ public class AddUserView : BaseView
     {
         SetHeaderTitle("Debug Diner | Add User");
 
-        SetNavigationItems(
-            "Home",
-            "Users",
-            "Add User",
-            "Reservations",
-            "Logout"
-        );
-
         NavigationMenu.OpenSelectedItem += (ListViewItemEventArgs e) =>
         {
             switch (e.Item)
             {
-                case 0: nav.NavigateTo<HomeView>(); break;
-                case 2: nav.NavigateTo<AddUserView>(); break;
-                case 3: nav.NavigateTo<ReservationsView>(); break;
+                case 0:
+                    nav.NavigateTo<HomeView>();
+                    break;
+                case 2:
+                    nav.NavigateTo<AddUserView>();
+                    break;
+                case 3:
+                    nav.NavigateTo<ReservationsView>();
+                    break;
                 case 4:
                     AppState.CurrentUser = null;
                     nav.NavigateTo<WelcomeView>();
@@ -143,7 +141,7 @@ public class AddUserView : BaseView
             Text = "Cancel",
         };
 
-        cancelBtn.Clicked += () => nav.NavigateTo<HomeView>();
+        cancelBtn.Clicked += nav.NavigateTo<HomeView>;
 
         frame.Add(
             nameLabel, nameField,

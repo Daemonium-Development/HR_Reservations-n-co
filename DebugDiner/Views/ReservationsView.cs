@@ -7,7 +7,7 @@ namespace DebugDiner;
 
 public class ReservationsView : BaseView
 {
-    private readonly List<ReservationEntity> _reservations;
+    private readonly List<ReservationEntity> _reservations = new();
 
     public ReservationsView(INavigationService nav, IReservationRepository reservations) : base(nav)
     {
@@ -23,11 +23,7 @@ public class ReservationsView : BaseView
             : "My Personal Reservations"
         );
 
-        var all = reservations.GetItemsAsync().GetAwaiter().GetResult();
-
-        _reservations = (isAdmin
-            ? all
-            : all.Where(r => r.UserId == AppState.CurrentUser!.Id)).ToList();
+        LoadData(reservations, isAdmin);
 
         var grouped = _reservations
             .GroupBy(r => r.Status)
@@ -44,13 +40,29 @@ public class ReservationsView : BaseView
 
         foreach (var (status, filtered) in grouped)
         {
-            tabView.AddTab(CreateTab(status.ToString(), filtered), false);
+            tabView.AddTab(CreateTab(status.ToString(), filtered, nav), false);
         }
 
         SetContent(tabView);
     }
 
-    private static TabView.Tab CreateTab(string title, List<ReservationEntity> reservations)
+    private void LoadData(IReservationRepository reservations, bool isAdmin)
+    {
+        var all = reservations.GetItemsAsync().GetAwaiter().GetResult();
+
+        _reservations.Clear();
+
+        _reservations.AddRange(
+            isAdmin
+                ? all
+                : all.Where(r => r.UserId == AppState.CurrentUser!.Id)
+        );
+    }
+
+    private static TabView.Tab CreateTab(
+        string title,
+        List<ReservationEntity> reservations,
+        INavigationService nav)
     {
         var container = new View
         {
@@ -61,6 +73,13 @@ public class ReservationsView : BaseView
         };
 
         var countLabel = new Label(5, 1, $"Total: {reservations.Count} reservations");
+        var header = new Label
+        {
+            X = 0,
+            Y = 0,
+            Width = Dim.Fill(),
+            Text = $"{"ID",-5} {"User",-7} {"Table",-7} {"Start",-20} {"End",-20} {"Guests",-8} {"Status",-12}",
+        };
 
         var table = new DataTable();
         table.Columns.Add("ID");
@@ -95,7 +114,39 @@ public class ReservationsView : BaseView
 
         tableView.Table = table;
 
-        container.Add(countLabel, tableView);
+        listView.KeyPress += e =>
+        {
+            if (e.KeyEvent.Key != Key.Enter) return;
+
+            var index = listView.SelectedItem;
+
+            if (index < 0 || index >= reservations.Count) return;
+
+            var reservation = reservations[index];
+
+            AppState.SelectedReservation = reservation;
+
+            var action = MessageBox.Query(
+                "Reservation",
+                "What do you want to do?",
+                "Edit",
+                "Delete",
+                "Cancel"
+            );
+
+            if (action == 0)
+            {
+                nav.NavigateTo<UpdateReservationView>();
+            }
+            else if (action == 1)
+            {
+                nav.NavigateTo<DeleteReservationView>();
+            }
+
+            e.Handled = true;
+        };
+
+        container.Add(header, listView);
 
         return new TabView.Tab(title, container);
     }
