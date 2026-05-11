@@ -53,7 +53,6 @@ public class UpdateReservationView : BaseView
             Width = 30
         };
 
-        // ✅ FIX: ADD END TIME FIELD
         var endLabel = new Label("End time:")
         {
             X = 2,
