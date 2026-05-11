@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 using Serilog.Events;
-using Terminal.Gui;
+using System.Globalization;
 
 namespace DebugDiner;
 
@@ -16,9 +16,10 @@ internal static class Program
     internal static async Task<int> Main(string[] args)
     {
         var special = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs", "debug-diner.log");
+        // var logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs", "debug-diner.log");
         // NOTE: If on mac, replace this with the line above
-        // var logFilePath = Path.Combine(special, "Debug Diner", "logs", "debug-diner.log");
+        var logFilePath = Path.Combine(special, "Debug Diner", "logs", "debug-diner.log");
+
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel
             .Debug()
@@ -81,6 +82,8 @@ internal static class Program
         // await auth.RegisterAsync("Randy", "randy@gmail.com", "1234", true);
         // await auth.RegisterAsync("Quintin", "quintin@gmail.com", "1234", true);
         // await auth.RegisterAsync("Lars", "lars@gmail.com", "1234", true);
+
+        CultureInfo.CurrentCulture = new CultureInfo("nl-NL");
 
         Terminal.Gui.Application.Init();
 

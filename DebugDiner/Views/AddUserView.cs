@@ -143,7 +143,7 @@ public class AddUserView : BaseView
             Text = "Cancel",
         };
 
-        cancelBtn.Clicked += () => nav.NavigateTo<HomeView>();
+        cancelBtn.Clicked += nav.NavigateTo<HomeView>;
 
         frame.Add(
             nameLabel, nameField,
