@@ -69,6 +69,8 @@ internal static class Program
                 services.AddTransient<DeleteUserView>();
                 services.AddTransient<AddUserView>();
                 services.AddTransient<CreateDishView>();
+                services.AddTransient<UpdateReservationView>();
+                services.AddTransient<DeleteReservationView>();
             });
 
         var app = builder.Build();
