@@ -48,6 +48,4 @@ public static class LayoutView
             Text = text,
         };
     }
-
-
 }

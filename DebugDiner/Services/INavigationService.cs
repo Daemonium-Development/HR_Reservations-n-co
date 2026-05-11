@@ -4,7 +4,9 @@ namespace DebugDiner.Services;
 
 public interface INavigationService
 {
-    void NavigateTo<TView>() where TView : View;
-    void NavigateBack();
-    void SetContentArea(View contentArea);
+    public event Action<IEnumerable<string>>? NavigationItemsChanged;
+
+    public void NavigateTo<TView>() where TView : View;
+    public void SetContentArea(View contentArea);
+    public void NavigateBack();
 }

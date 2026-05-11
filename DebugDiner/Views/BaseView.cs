@@ -11,7 +11,7 @@ public class BaseView : View
     protected FrameView ContentFrame { get; }
     protected Label HeaderLabel { get; }
 
-    public BaseView(INavigationService nav)
+    protected BaseView(INavigationService nav)
     {
         X = 0;
         Y = 0;
@@ -41,6 +41,7 @@ public class BaseView : View
             Height = Dim.Fill() - 2,
             ColorScheme = LayoutView.DefaultColorScheme,
         };
+        nav.NavigationItemsChanged += ReplaceNavigationItems;
 
         var backBtn = new Button
         {
@@ -110,5 +111,14 @@ public class BaseView : View
     protected void SetContentTitle(string title)
     {
         ContentFrame.Title = title;
+    }
+
+    private void ReplaceNavigationItems(IEnumerable<string> items)
+    {
+        Terminal.Gui.Application.MainLoop.Invoke(() =>
+        {
+            NavigationMenu.SetSource(new ObservableCollection<string>(items.ToList()));
+            NavigationMenu.SetNeedsDisplay();
+        });
     }
 }

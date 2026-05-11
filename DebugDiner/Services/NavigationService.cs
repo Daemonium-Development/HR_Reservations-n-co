@@ -9,6 +9,8 @@ public class NavigationService(IServiceProvider services) : INavigationService
     private Type? _currentViewType;
     private readonly Stack<Type> _history = new();
 
+    public event Action<IEnumerable<string>>? NavigationItemsChanged;
+
     public void SetContentArea(View contentArea)
     {
         _contentArea = contentArea;
@@ -25,9 +27,8 @@ public class NavigationService(IServiceProvider services) : INavigationService
 
         _currentViewType = typeof(TView);
 
-        var view = services.GetRequiredService<TView>();
-
-        SwapContent(view);
+        SwapContent(services.GetRequiredService<TView>());
+        RaiseNavigationItemsChanged();
     }
 
     public void NavigateBack()
@@ -40,6 +41,7 @@ public class NavigationService(IServiceProvider services) : INavigationService
         var view = (View)services.GetRequiredService(_currentViewType);
 
         SwapContent(view);
+        RaiseNavigationItemsChanged();
     }
 
     private void SwapContent(View view)
@@ -61,5 +63,12 @@ public class NavigationService(IServiceProvider services) : INavigationService
         _contentArea.Add(view);
 
         _contentArea.SetNeedsDisplay();
+    }
+
+    private void RaiseNavigationItemsChanged()
+    {
+        if (_currentViewType is null) return;
+        var items = NavigationRegistry.GetItemsFor(_currentViewType);
+        NavigationItemsChanged?.Invoke(items);
     }
 }
