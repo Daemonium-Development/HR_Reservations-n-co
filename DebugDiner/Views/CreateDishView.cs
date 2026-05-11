@@ -10,13 +10,6 @@ public class CreateDishView : BaseView
     {
         SetHeaderTitle("Debug Diner | Create Dish");
 
-        SetNavigationItems(
-            "Home",
-            "Create Dish",
-            "Reservations",
-            "Logout"
-        );
-
         NavigationMenu.OpenSelectedItem += (ListViewItemEventArgs e) =>
         {
             switch (e.Item)

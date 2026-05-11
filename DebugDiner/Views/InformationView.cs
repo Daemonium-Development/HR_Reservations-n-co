@@ -26,14 +26,6 @@ public class InformationView : BaseView
 
         SetHeaderTitle("Debug Diner | User information");
 
-        SetNavigationItems(
-            "Home",
-            "Make a reservation",
-            "View my reservation(s)",
-            "View user information",
-            "Logout"
-        );
-
         NavigationMenu.OpenSelectedItem += (ListViewItemEventArgs e) =>
         {
             switch (e.Item)
