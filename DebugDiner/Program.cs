@@ -74,27 +74,36 @@ internal static class Program
         var app = builder.Build();
 
         var db = app.Services.GetRequiredService<IDataService>();
-        await db.StartAsync();
+        var logger = app.Services.GetRequiredService<ILogger>();
+        try
+        {
+            await db.StartAsync();
 
-        // NOTE: Uncomment this to create some test admin users
-        var auth = app.Services.GetRequiredService<IAuthService>();
-        await auth.RegisterAsync("Soufian", "soufian@gmail.com", "1234", true);
-        // await auth.RegisterAsync("Randy", "randy@gmail.com", "1234", true);
-        // await auth.RegisterAsync("Quintin", "quintin@gmail.com", "1234", true);
-        // await auth.RegisterAsync("Lars", "lars@gmail.com", "1234", true);
+            // NOTE: Uncomment this to create some test admin users
+            var auth = app.Services.GetRequiredService<IAuthService>();
+            await auth.RegisterAsync("Soufian", "soufian@gmail.com", "1234", true);
+            // await auth.RegisterAsync("Randy", "randy@gmail.com", "1234", true);
+            // await auth.RegisterAsync("Quintin", "quintin@gmail.com", "1234", true);
+            // await auth.RegisterAsync("Lars", "lars@gmail.com", "1234", true);
 
-        CultureInfo.CurrentCulture = new CultureInfo("nl-NL");
+            CultureInfo.CurrentCulture = new CultureInfo("nl-NL");
 
-        Terminal.Gui.Application.Init();
+            Terminal.Gui.Application.Init();
 
-        DisableMouseTracking();
+            DisableMouseTracking();
 
-        var nav = app.Services.GetRequiredService<INavigationService>();
-        nav.SetContentArea(Terminal.Gui.Application.Top!);
-        nav.NavigateTo<WelcomeView>();
-        Terminal.Gui.Application.Run();
-
-        return 0;
+            var nav = app.Services.GetRequiredService<INavigationService>();
+            nav.SetContentArea(Terminal.Gui.Application.Top!);
+            nav.NavigateTo<WelcomeView>();
+            Terminal.Gui.Application.Run();
+            logger.Information("Application finished.");
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            logger.Fatal(ex, "Application failed to start.");
+            return ex.HResult;
+        }
     }
 
     private static void DisableMouseTracking()
