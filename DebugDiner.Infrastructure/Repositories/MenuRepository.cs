@@ -151,13 +151,18 @@ public class MenuRepository(ILogger logger, IDataService data) : IMenuRepository
         {
             try
             {
+                var deleteArrangementDish = data.Connection.CreateCommand();
+                deleteArrangementDish.CommandText = "DELETE FROM `arrangement_dish` WHERE `dish_id` = @id";
+                deleteArrangementDish.Parameters.AddWithValue("@id", dish.Id);
+                await deleteArrangementDish.ExecuteNonQueryAsync();
+
                 var command = data.Connection.CreateCommand();
                 command.CommandText = QueryConstants.Delete.Replace("{table}", "`dish`");
 
                 command.Parameters.AddWithValue("@id", dish.Id);
                 await command.ExecuteNonQueryAsync();
 
-                logger.Debug("Dish with id {Id} deleted.", dish.Id);
+                logger.Debug("Dish with id {Id} deleted. {Command}", dish.Id, command.CommandText.ToString());
             }
             catch (SqliteException e)
             {
