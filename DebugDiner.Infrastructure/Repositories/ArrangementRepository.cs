@@ -145,10 +145,23 @@ public class ArrangementRepository(ILogger logger, IDataService data) : IArrange
         {
             try
             {
+                var deleteArrangementDish = data.Connection.CreateCommand();
+                deleteArrangementDish.CommandText = QueryConstants.DeleteByColumn
+                    .Replace("{table}", "`arrangement_dish`")
+                    .Replace("{column}", "arrangement_id");
+                deleteArrangementDish.Parameters.AddWithValue("@value", arrangement.Id);
+                await deleteArrangementDish.ExecuteNonQueryAsync();
+
+                var deleteReservationArrangement = data.Connection.CreateCommand();
+                deleteReservationArrangement.CommandText = QueryConstants.DeleteByColumn
+                    .Replace("{table}", "`reservation_arrangement`")
+                    .Replace("{column}", "arrangement_id");
+                deleteReservationArrangement.Parameters.AddWithValue("@value", arrangement.Id);
+                await deleteReservationArrangement.ExecuteNonQueryAsync();
+
                 var command = data.Connection.CreateCommand();
                 command.CommandText = QueryConstants.Delete
                     .Replace("{table}", "`arrangement`");
-
                 command.Parameters.AddWithValue("@id", arrangement.Id);
                 await command.ExecuteNonQueryAsync();
 
