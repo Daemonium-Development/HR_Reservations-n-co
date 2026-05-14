@@ -1,13 +1,12 @@
 using DebugDiner.Domain.Abstractions;
 using DebugDiner.Services;
-using System.Collections.ObjectModel;
 using Terminal.Gui;
 
 namespace DebugDiner;
 
-public class MakeReservationsView : BaseView
+public class CreateReservationsView : BaseView
 {
-    public MakeReservationsView(
+    public CreateReservationsView(
         INavigationService nav,
         IReservationRepository reservationRepository,
         ITableRepository tableRepository

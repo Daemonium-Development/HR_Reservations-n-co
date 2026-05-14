@@ -1,6 +1,6 @@
+using Terminal.Gui;
 using DebugDiner.Domain.Abstractions;
 using DebugDiner.Services;
-using Terminal.Gui;
 
 namespace DebugDiner;
 
@@ -12,9 +12,10 @@ public class UpdateUserView : BaseView
         SetContentTitle("Update User");
 
         var user = AppState.SelectedUser;
+
         if (user is null)
         {
-            nav.NavigateTo<AdminUsersView>();
+            nav.NavigateBack();
             return;
         }
 
@@ -32,55 +33,49 @@ public class UpdateUserView : BaseView
             Y = 0,
             Text = "Name:",
         };
-        nameLabel.GetCurrentHeight(out var nameLabelHeight);
 
         var nameInput = new TextField
         {
             X = 0,
-            Y = nameLabelHeight + nameLabel.Y,
+            Y = 1,
             Width = Dim.Fill(),
             Text = user.Name,
         };
-        nameInput.GetCurrentHeight(out var nameInputHeight);
 
         var emailLabel = new Label
         {
             X = 0,
-            Y = (nameInputHeight + nameInput.Y) + 1,
+            Y = 3,
             Text = "Email:",
         };
-        emailLabel.GetCurrentHeight(out var emailLabelHeight);
 
         var emailInput = new TextField
         {
             X = 0,
-            Y = emailLabelHeight + emailLabel.Y,
+            Y = 4,
             Width = Dim.Fill(),
             Text = user.Email,
         };
-        emailInput.GetCurrentHeight(out var emailInputHeight);
 
         var roleLabel = new Label
         {
             X = 0,
-            Y = (emailInputHeight + emailInput.Y) + 1,
+            Y = 6,
             Text = "Role:",
         };
-        roleLabel.GetCurrentHeight(out var roleLabelHeight);
 
         var roleNames = Enum.GetNames<Role>();
         var roleGroup = new RadioGroup(roleNames.Select(n => (NStack.ustring)n).ToArray())
         {
             X = 0,
-            Y = roleLabelHeight + roleLabel.Y,
+            Y = 7,
             SelectedItem = Array.IndexOf(roleNames, user.Role.ToString()),
         };
-        roleGroup.GetCurrentHeight(out var roleGroupHeight);
 
         var submitBtn = new Button
         {
             X = 0,
-            Y = (roleGroupHeight + roleGroup.Y) + 1,
+            Y = 12,
             AutoSize = true,
             Text = "Update User",
         };
@@ -97,7 +92,8 @@ public class UpdateUserView : BaseView
             try
             {
                 userRepository.Update([user]).GetAwaiter().GetResult();
-                nav.NavigateTo<AdminUsersView>();
+                AppState.SelectedUser = null;
+                nav.NavigateBack();
             }
             catch (Exception ex)
             {

@@ -1,6 +1,6 @@
+using Terminal.Gui;
 using DebugDiner.Domain.Abstractions;
 using DebugDiner.Services;
-using Terminal.Gui;
 
 namespace DebugDiner;
 
@@ -27,36 +27,53 @@ public class DeleteReservationView : BaseView
             Height = Dim.Fill()
         };
 
-        var label = new Label($"Delete reservation #{reservation.Id}?")
+        var questionLabel = new Label
         {
             X = Pos.Center(),
-            Y = 5
+            Y = 5,
+            Text = "Are you sure you want to delete this reservation?"
         };
 
-        var yes = new Button("Yes")
+        var detailLabel = new Label
         {
-            X = Pos.Center() - 10,
-            Y = 7
+            X = Pos.Center(),
+            Y = questionLabel.Y + 1,
+            Text = $"Table {reservation.TableId} — {reservation.StartTime.ToString("dd-MM-yyyy HH:mm")}"
         };
 
-        var no = new Button("No")
+        var yesBtn = new Button
         {
-            X = Pos.Center() + 2,
-            Y = 7
+            X = 5,
+            Y = detailLabel.Y + 3,
+            AutoSize = true,
+            Text = "Yes, delete reservation"
         };
 
-        yes.Clicked += () =>
+        yesBtn.Clicked += () =>
         {
-            repo.Delete([reservation]).GetAwaiter().GetResult();
-
-            AppState.SelectedReservation = null;
-
-            nav.NavigateBack();
+            try
+            {
+                repo.Delete([reservation]).GetAwaiter().GetResult();
+                AppState.SelectedReservation = null;
+                nav.NavigateBack();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", $"Failed to delete reservation: {ex.Message}", "OK");
+            }
         };
 
-        no.Clicked += () => nav.NavigateBack();
+        var noBtn = new Button
+        {
+            X = Pos.Right(yesBtn) + 5,
+            Y = yesBtn.Y,
+            AutoSize = true,
+            Text = "No, go back"
+        };
 
-        container.Add(label, yes, no);
+        noBtn.Clicked += () => nav.NavigateBack();
+
+        container.Add(questionLabel, detailLabel, yesBtn, noBtn);
         SetContent(container);
     }
 }

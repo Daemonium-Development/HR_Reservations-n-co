@@ -4,9 +4,9 @@ using Terminal.Gui;
 
 namespace DebugDiner;
 
-public class AddUserView : BaseView
+public class CreateUserView : BaseView
 {
-    public AddUserView(INavigationService nav, IAuthService auth) : base(nav)
+    public CreateUserView(INavigationService nav, IAuthService auth) : base(nav)
     {
         SetHeaderTitle("Debug Diner | Add User");
 
@@ -18,7 +18,7 @@ public class AddUserView : BaseView
                     nav.NavigateTo<HomeView>();
                     break;
                 case 2:
-                    nav.NavigateTo<AddUserView>();
+                    nav.NavigateTo<CreateUserView>();
                     break;
                 case 3:
                     nav.NavigateTo<ReservationsView>();

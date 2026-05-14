@@ -18,7 +18,7 @@ public class HomeView : BaseView
                     nav.NavigateTo<HomeView>();
                     break;
                 case (1, _):
-                    nav.NavigateTo<MakeReservationsView>();
+                    nav.NavigateTo<CreateReservationsView>();
                     break;
                 case (2, _):
                     nav.NavigateTo<ReservationsView>();
@@ -33,7 +33,7 @@ public class HomeView : BaseView
                     nav.NavigateTo<AdminUsersView>();
                     break;
                 case (6, Role.Admin):
-                    nav.NavigateTo<AddUserView>();
+                    nav.NavigateTo<CreateUserView>();
                     break;
                 case (7, Role.Admin):
                     nav.NavigateTo<ReservationsView>();

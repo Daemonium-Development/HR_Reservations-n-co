@@ -6,7 +6,7 @@ public class NavigationRegistry
 {
     private static readonly Dictionary<Type, Func<IEnumerable<string>>> _registry = new()
     {
-        [typeof(AddUserView)] = () => ["Home", "Users", "Logout"],
+        [typeof(CreateUserView)] = () => ["Home", "Users", "Logout"],
 
         [typeof(CreateDishView)] = () => ["Home", "Logout"],
 
@@ -28,7 +28,7 @@ public class NavigationRegistry
         [typeof(WelcomeView)] = () => [],
 
         [typeof(DeleteUserView)]       = () => [],
-        [typeof(MakeReservationsView)] = () => [],
+        [typeof(CreateReservationsView)] = () => [],
         [typeof(AdminUsersView)]       = () => [],
         [typeof(ReservationsView)]     = () => [],
         [typeof(UpdateUserView)]       = () => []
