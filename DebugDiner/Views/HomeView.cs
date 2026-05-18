@@ -33,10 +33,10 @@ public class HomeView : BaseView
                     nav.NavigateTo<CreateDishView>();
                     break;
                 case (6, Role.Admin):
-                    nav.NavigateTo<CreateUserView>();
+                    nav.NavigateTo<AdminUsersView>();
                     break;
                 case (7, Role.Admin):
-                    nav.NavigateTo<AddUserView>();
+                    nav.NavigateTo<CreateUserView>();
                     break;
                 case (8, Role.Admin):
                     nav.NavigateTo<ReservationsView>();
