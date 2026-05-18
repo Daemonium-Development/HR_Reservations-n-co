@@ -82,7 +82,10 @@ public class UpdateUserView : BaseView
 
         submitBtn.Clicked += () =>
         {
-            if (!Enum.TryParse<Role>(roleNames[roleGroup.SelectedItem], out var newRole)) return;
+            if (!Enum.TryParse<Role>(roleNames[roleGroup.SelectedItem], out var newRole))
+            {
+                return;
+            }
 
             user.Name      = nameInput.Text.ToString()  ?? user.Name;
             user.Email     = emailInput.Text.ToString() ?? user.Email;

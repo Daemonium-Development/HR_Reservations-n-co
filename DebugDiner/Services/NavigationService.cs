@@ -9,7 +9,20 @@ public class NavigationService(IServiceProvider services) : INavigationService
     private Type? _currentViewType;
     private readonly Stack<Type> _history = new();
 
-    public event Action<IEnumerable<string>>? NavigationItemsChanged;
+    private static readonly HashSet<Type> _transientViews =
+    [
+        typeof(CreateUserView),
+        typeof(UpdateUserView),
+        typeof(DeleteUserView),
+        typeof(CreateDishView),
+        typeof(UpdateDishView),
+        typeof(DeleteDishView),
+        typeof(CreateReservationsView),
+        typeof(UpdateReservationView),
+        typeof(DeleteReservationView),
+    ];
+
+    public event Action<IEnumerable<NavigationItem>>? NavigationItemsChanged;
 
     public void SetContentArea(View contentArea)
     {
@@ -23,13 +36,12 @@ public class NavigationService(IServiceProvider services) : INavigationService
             return;
         }
 
-        if (_currentViewType is not null)
+        if (_currentViewType is not null && !_transientViews.Contains(_currentViewType))
         {
             _history.Push(_currentViewType);
         }
 
         _currentViewType = typeof(TView);
-
         SwapContent(services.GetRequiredService<TView>());
         RaiseNavigationItemsChanged();
     }
@@ -42,12 +54,12 @@ public class NavigationService(IServiceProvider services) : INavigationService
         }
 
         _currentViewType = _history.Pop();
-
         var view = (View)services.GetRequiredService(_currentViewType);
-
         SwapContent(view);
         RaiseNavigationItemsChanged();
     }
+
+    public void ClearHistory() => _history.Clear();
 
     private void SwapContent(View view)
     {
@@ -57,8 +69,7 @@ public class NavigationService(IServiceProvider services) : INavigationService
         }
 
         var oldContent = _contentArea.Subviews.FirstOrDefault();
-
-        if (oldContent != null)
+        if (oldContent is not null)
         {
             _contentArea.Remove(oldContent);
         }
@@ -69,14 +80,17 @@ public class NavigationService(IServiceProvider services) : INavigationService
         view.Height = Dim.Fill();
 
         _contentArea.Add(view);
-
         _contentArea.SetNeedsDisplay();
     }
 
     private void RaiseNavigationItemsChanged()
     {
-        if (_currentViewType is null) return;
-        var items = NavigationRegistry.GetItemsFor(_currentViewType);
+        if (_currentViewType is null)
+        {
+            return;
+        }
+
+        var items = NavigationRegistry.GetItemsFor(_currentViewType, this);
         NavigationItemsChanged?.Invoke(items);
     }
 }

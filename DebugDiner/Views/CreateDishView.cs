@@ -10,20 +10,6 @@ public class CreateDishView : BaseView
     {
         SetHeaderTitle("Debug Diner | Create Dish");
 
-        NavigationMenu.OpenSelectedItem += (ListViewItemEventArgs e) =>
-        {
-            switch (e.Item)
-            {
-                case 0: nav.NavigateTo<HomeView>(); break;
-                case 1: nav.NavigateTo<CreateDishView>(); break;
-                case 2: nav.NavigateTo<ReservationsView>(); break;
-                case 3:
-                    AppState.CurrentUser = null;
-                    nav.NavigateTo<WelcomeView>();
-                    break;
-            }
-        };
-
         var container = new View
         {
             X = 0,
@@ -154,7 +140,7 @@ public class CreateDishView : BaseView
             }
 
             MessageBox.Query("Complete", $"Dish '{name}' created.", "OK");
-            nav.NavigateTo<HomeView>();
+            nav.NavigateBack();
         };
 
         var cancelBtn = new Button
@@ -164,7 +150,7 @@ public class CreateDishView : BaseView
             Text = "Cancel",
         };
 
-        cancelBtn.Clicked += () => nav.NavigateTo<HomeView>();
+        cancelBtn.Clicked += nav.NavigateBack;
 
         frame.Add(
             nameLabel, nameField,

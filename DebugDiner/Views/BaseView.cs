@@ -11,6 +11,8 @@ public class BaseView : View
     protected FrameView ContentFrame { get; }
     protected Label HeaderLabel { get; }
 
+    private IReadOnlyList<NavigationItem> _navItems = [];
+
     protected BaseView(INavigationService nav)
     {
         X = 0;
@@ -41,7 +43,16 @@ public class BaseView : View
             Height = Dim.Fill() - 2,
             ColorScheme = LayoutView.DefaultColorScheme,
         };
-        nav.NavigationItemsChanged += ReplaceNavigationItems;
+
+        NavigationMenu.OpenSelectedItem += e =>
+        {
+            if (e.Item >= 0 && e.Item < _navItems.Count)
+            {
+                _navItems[e.Item].Navigate(nav);
+            }
+        };
+
+        nav.NavigationItemsChanged += UpdateNavigationMenu;
 
         var backBtn = new Button
         {
@@ -73,23 +84,6 @@ public class BaseView : View
         Add(ContentFrame);
     }
 
-    protected void SetNavigationItems(params string[] items)
-    {
-        if (NavigationMenu.Source is null || NavigationMenu.Source.Count == 0)
-        {
-            NavigationMenu.SetSource(new ObservableCollection<string>(items));
-            return;
-        }
-        var collection = NavigationMenu.Source.ToList();
-        List<string> navItems = [];
-        foreach (string item in collection)
-        {
-            navItems.Add(item);
-        }
-        navItems.AddRange(items);
-        NavigationMenu.SetSource(new ObservableCollection<string>(navItems));
-    }
-
     protected void SetContent(View view)
     {
         ContentFrame.RemoveAll();
@@ -113,11 +107,12 @@ public class BaseView : View
         ContentFrame.Title = title;
     }
 
-    private void ReplaceNavigationItems(IEnumerable<string> items)
+    private void UpdateNavigationMenu(IEnumerable<NavigationItem> items)
     {
+        _navItems = items.ToList();
         Terminal.Gui.Application.MainLoop.Invoke(() =>
         {
-            NavigationMenu.SetSource(new ObservableCollection<string>(items.ToList()));
+            NavigationMenu.SetSource(new ObservableCollection<string>(_navItems.Select(i => i.Label).ToList()));
             NavigationMenu.SetNeedsDisplay();
         });
     }
