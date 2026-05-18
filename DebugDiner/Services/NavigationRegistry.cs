@@ -12,7 +12,8 @@ public class NavigationRegistry
 
         [typeof(HomeView)] = () =>
         {
-            var items = new List<string>() { "Home", "Make a Reservation", "View my Reservations", "User Information" };
+            var items = new List<string>() { "Home", "Make a Reservation", "View my Reservations", "User Information"
+                , "Menu (Dishes)" };
             if (AppState.CurrentUser?.Role == Role.Admin)
             {
                 items.AddRange(["Create Dish", "Users", "Add User", "Admin Reservations"]);

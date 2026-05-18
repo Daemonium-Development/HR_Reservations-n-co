@@ -68,7 +68,11 @@ internal static class Program
                 services.AddTransient<UpdateUserView>();
                 services.AddTransient<DeleteUserView>();
                 services.AddTransient<CreateUserView>();
+                services.AddTransient<AddUserView>();
+                services.AddTransient<DishView>();
                 services.AddTransient<CreateDishView>();
+                services.AddTransient<DeleteDishView>();
+                services.AddTransient<UpdateDishView>();
                 services.AddTransient<UpdateReservationView>();
                 services.AddTransient<DeleteReservationView>();
             });
