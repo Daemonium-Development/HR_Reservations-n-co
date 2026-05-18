@@ -48,7 +48,7 @@ public class DeleteDishView : BaseView
             try
             {
                 menuRepository.Delete([selectedDish]).GetAwaiter().GetResult();
-                nav.NavigateTo<DishView>();
+                nav.NavigateBack();
             }
             catch (Exception ex)
             {
@@ -64,7 +64,7 @@ public class DeleteDishView : BaseView
             Text = "No, go back",
         };
 
-        noBtn.Clicked += () => nav.NavigateTo<DishView>();
+        noBtn.Clicked += nav.NavigateBack;
 
         container.Add(questionLabel, nameLabel, yesBtn, noBtn);
         SetContent(container);

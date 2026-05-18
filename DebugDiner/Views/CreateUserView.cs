@@ -10,26 +10,6 @@ public class CreateUserView : BaseView
     {
         SetHeaderTitle("Debug Diner | Add User");
 
-        NavigationMenu.OpenSelectedItem += (ListViewItemEventArgs e) =>
-        {
-            switch (e.Item)
-            {
-                case 0:
-                    nav.NavigateTo<HomeView>();
-                    break;
-                case 2:
-                    nav.NavigateTo<CreateUserView>();
-                    break;
-                case 3:
-                    nav.NavigateTo<ReservationsView>();
-                    break;
-                case 4:
-                    AppState.CurrentUser = null;
-                    nav.NavigateTo<WelcomeView>();
-                    break;
-            }
-        };
-
         var container = new View
         {
             X = 0,
@@ -131,7 +111,7 @@ public class CreateUserView : BaseView
             }
 
             MessageBox.Query("Success", $"User '{result.Name}' created.", "OK");
-            nav.NavigateTo<HomeView>();
+            nav.NavigateBack();
         };
 
         var cancelBtn = new Button
@@ -141,7 +121,7 @@ public class CreateUserView : BaseView
             Text = "Cancel",
         };
 
-        cancelBtn.Clicked += nav.NavigateTo<HomeView>;
+        cancelBtn.Clicked += nav.NavigateBack;
 
         frame.Add(
             nameLabel, nameField,

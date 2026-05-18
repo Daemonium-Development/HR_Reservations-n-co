@@ -150,7 +150,7 @@ public class UpdateDishView : BaseView
             try
             {
                 menuRepository.Update([selectedDish]).GetAwaiter().GetResult();
-                nav.NavigateTo<DishView>();
+                nav.NavigateBack();
             }
             catch (Exception ex)
             {

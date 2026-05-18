@@ -71,7 +71,7 @@ public class DeleteUserView : BaseView
             Text = "No, go back",
         };
 
-        noBtn.Clicked += () => nav.NavigateBack();
+        noBtn.Clicked += nav.NavigateBack;
 
         container.Add(questionLabel, nameLabel, yesBtn, noBtn);
         SetContent(container);

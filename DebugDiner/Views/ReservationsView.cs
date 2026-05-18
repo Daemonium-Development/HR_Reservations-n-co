@@ -116,7 +116,10 @@ public class ReservationsView : BaseView
 
         tableView.CellActivated += (args) =>
         {
-            if (args.Row >= reservations.Count) return;
+            if (args.Row >= reservations.Count)
+            {
+                return;
+            }
 
             var reservation = reservations[args.Row];
 

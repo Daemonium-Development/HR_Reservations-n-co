@@ -110,24 +110,34 @@ public class CreateReservationsView : BaseView
         submitBtn.Clicked += () =>
         {
             if (AppState.CurrentUser is null)
+            {
                 return;
+            }
 
             if (tableList.SelectedItem < 0)
+            {
                 return;
+            }
 
             var selectedTable = tables[tableList.SelectedItem];
 
             if (takenTableIds.Contains(selectedTable.Id))
+            {
                 return;
+            }
 
             if (!int.TryParse(guestInput.Text.ToString(), out var guests) || guests <= 0)
+            {
                 return;
+            }
 
             var start = dateInput.Date.Date + startTimeInput.Time;
             var end = dateInput.Date.Date + endTimeInput.Time;
 
             if (end <= start)
+            {
                 return;
+            }
 
             var entity = new ReservationEntity
             {
@@ -144,10 +154,12 @@ public class CreateReservationsView : BaseView
             var result = reservationRepository.Create([entity]).GetAwaiter().GetResult();
 
             if (!result.Any())
+            {
                 return;
+            }
 
             MessageBox.Query("Success", "Reservation created.", "OK");
-            nav.NavigateTo<HomeView>();
+            nav.NavigateBack();
         };
 
         container.Add(
