@@ -62,11 +62,12 @@ internal static class Program
                 services.AddTransient<RegisterView>();
                 services.AddTransient<HomeView>();
                 services.AddTransient<InformationView>();
-                services.AddTransient<MakeReservationsView>();
+                services.AddTransient<CreateReservationsView>();
                 services.AddTransient<ReservationsView>();
                 services.AddTransient<AdminUsersView>();
                 services.AddTransient<UpdateUserView>();
                 services.AddTransient<DeleteUserView>();
+                services.AddTransient<CreateUserView>();
                 services.AddTransient<AddUserView>();
                 services.AddTransient<DishView>();
                 services.AddTransient<CreateDishView>();

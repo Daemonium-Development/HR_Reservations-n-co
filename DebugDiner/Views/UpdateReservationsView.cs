@@ -1,6 +1,6 @@
+using Terminal.Gui;
 using DebugDiner.Domain.Abstractions;
 using DebugDiner.Services;
-using Terminal.Gui;
 
 namespace DebugDiner;
 
@@ -27,73 +27,97 @@ public class UpdateReservationView : BaseView
             Height = Dim.Fill()
         };
 
-        var guestsLabel = new Label("Guests:")
+        var guestsLabel = new Label
         {
             X = 2,
-            Y = 2
+            Y = 2,
+            Text = "Guests:"
         };
 
-        var guestsInput = new TextField(reservation.Guests.ToString())
+        var guestsInput = new TextField
         {
             X = 2,
             Y = 3,
-            Width = 20
+            Width = 20,
+            Text = reservation.Guests.ToString()
         };
 
-        var startLabel = new Label("Start time:")
+        var startLabel = new Label
         {
             X = 2,
-            Y = 5
+            Y = 5,
+            Text = "Start time:"
         };
 
-        var startInput = new TextField(reservation.StartTime.ToString("yyyy-MM-dd HH:mm"))
+        var startInput = new TextField
         {
             X = 2,
             Y = 6,
-            Width = 30
+            Width = 30,
+            Text = reservation.StartTime.ToString("dd-MM-yyyy HH:mm")
         };
 
-        var endLabel = new Label("End time:")
+        var endLabel = new Label
         {
             X = 2,
-            Y = 8
+            Y = 8,
+            Text = "End time:"
         };
 
-        var endInput = new TextField(reservation.EndTime.ToString("yyyy-MM-dd HH:mm"))
+        var endInput = new TextField
         {
             X = 2,
             Y = 9,
-            Width = 30
+            Width = 30,
+            Text = reservation.EndTime.ToString("dd-MM-yyyy HH:mm")
         };
 
-        var saveBtn = new Button("Save")
+        var saveBtn = new Button
         {
             X = 2,
-            Y = 11
+            Y = 11,
+            Text = "Save"
         };
 
         saveBtn.Clicked += () =>
         {
-            if (int.TryParse(guestsInput.Text.ToString(), out var guests))
+            var errors = new List<string>();
+
+            if (!int.TryParse(guestsInput.Text.ToString(), out var guests))
             {
-                reservation.Guests = guests;
+                errors.Add("Guests must be a valid number.");
             }
 
-            if (DateTime.TryParse(startInput.Text.ToString(), out var start))
+            if (!DateTime.TryParse(startInput.Text.ToString(), out var start))
             {
-                reservation.StartTime = start;
+                errors.Add($"Start time must be a valid date ({"dd-MM-yyyy HH:mm"}).");
             }
 
-            if (DateTime.TryParse(endInput.Text.ToString(), out var end))
+            if (!DateTime.TryParse(endInput.Text.ToString(), out var end))
             {
-                reservation.EndTime = end;
+                errors.Add($"End time must be a valid date ({"dd-MM-yyyy HH:mm"}).");
             }
 
-            repo.Update([reservation]).GetAwaiter().GetResult();
+            if (errors.Count > 0)
+            {
+                MessageBox.ErrorQuery("Validation Error", string.Join("\n", errors), "OK");
+                return;
+            }
 
-            AppState.SelectedReservation = null;
+            reservation.Guests    = guests;
+            reservation.StartTime = start;
+            reservation.EndTime   = end;
 
-            nav.NavigateBack();
+            try
+            {
+                repo.Update([reservation]).GetAwaiter().GetResult();
+                AppState.SelectedReservation = null;
+                nav.NavigateBack();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.ErrorQuery("Error", $"Failed to update reservation: {ex.Message}", "OK");
+            }
         };
 
         container.Add(

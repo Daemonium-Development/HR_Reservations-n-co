@@ -1,6 +1,6 @@
+using Terminal.Gui;
 using DebugDiner.Domain.Abstractions;
 using DebugDiner.Services;
-using Terminal.Gui;
 
 namespace DebugDiner;
 
@@ -12,9 +12,10 @@ public class DeleteUserView : BaseView
         SetContentTitle("Delete User");
 
         var user = AppState.SelectedUser;
+
         if (user is null)
         {
-            nav.NavigateTo<AdminUsersView>();
+            nav.NavigateBack();
             return;
         }
 
@@ -53,7 +54,8 @@ public class DeleteUserView : BaseView
             try
             {
                 userRepository.Delete([user]).GetAwaiter().GetResult();
-                nav.NavigateTo<AdminUsersView>();
+                AppState.SelectedUser = null;
+                nav.NavigateBack();
             }
             catch (Exception ex)
             {
@@ -69,7 +71,7 @@ public class DeleteUserView : BaseView
             Text = "No, go back",
         };
 
-        noBtn.Clicked += () => nav.NavigateTo<AdminUsersView>();
+        noBtn.Clicked += () => nav.NavigateBack();
 
         container.Add(questionLabel, nameLabel, yesBtn, noBtn);
         SetContent(container);

@@ -1,13 +1,13 @@
-using DebugDiner.Domain.Abstractions;
-using System.Collections.ObjectModel;
-using DebugDiner.Services;
+using System.Data;
 using Terminal.Gui;
+using DebugDiner.Domain.Abstractions;
+using DebugDiner.Services;
 
 namespace DebugDiner;
 
 public class ReservationsView : BaseView
 {
-    private readonly List<ReservationEntity> _reservations = new();
+    private readonly List<ReservationEntity> _reservations = [];
 
     public ReservationsView(INavigationService nav, IReservationRepository reservations) : base(nav)
     {
@@ -48,15 +48,20 @@ public class ReservationsView : BaseView
 
     private void LoadData(IReservationRepository reservations, bool isAdmin)
     {
-        var all = reservations.GetItemsAsync().GetAwaiter().GetResult();
-
-        _reservations.Clear();
-
-        _reservations.AddRange(
-            isAdmin
-                ? all
-                : all.Where(r => r.UserId == AppState.CurrentUser!.Id)
-        );
+        try
+        {
+            var all = reservations.GetItemsAsync().GetAwaiter().GetResult();
+            _reservations.Clear();
+            _reservations.AddRange(
+                isAdmin
+                    ? all
+                    : all.Where(r => r.UserId == AppState.CurrentUser!.Id)
+            );
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery("Error", $"Failed to load reservations: {ex.Message}", "OK");
+        }
     }
 
     private static TabView.Tab CreateTab(
@@ -64,6 +69,9 @@ public class ReservationsView : BaseView
         List<ReservationEntity> reservations,
         INavigationService nav)
     {
+        const int EditCol   = 6;
+        const int DeleteCol = 7;
+
         var container = new View
         {
             X = 0,
@@ -72,63 +80,59 @@ public class ReservationsView : BaseView
             Height = Dim.Fill(),
         };
 
-        var header = new Label
+        var table = new DataTable();
+        table.Columns.Add("ID");
+        table.Columns.Add("User");
+        table.Columns.Add("Table");
+        table.Columns.Add("Start");
+        table.Columns.Add("End");
+        table.Columns.Add("Guests");
+        table.Columns.Add("Edit");
+        table.Columns.Add("Delete");
+
+        foreach (var r in reservations)
+        {
+            table.Rows.Add(
+                r.Id,
+                r.UserId,
+                r.TableId,
+                r.StartTime.ToString("dd-MM-yyyy HH:mm"),
+                r.EndTime.ToString("dd-MM-yyyy HH:mm"),
+                r.Guests,
+                "[Edit]",
+                "[Delete]"
+            );
+        }
+
+        var tableView = new TableView
         {
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
-            Text = $"{"ID",-5} {"User",-7} {"Table",-7} {"Start",-20} {"End",-20} {"Guests",-8} {"Status",-12}",
-        };
-
-        var items = new ObservableCollection<string>(
-            reservations.Select(r =>
-                $"{r.Id,-5} {r.UserId,-7} {r.TableId,-7} {r.StartTime,-20:dd-MM-yyyy HH:mm} {r.EndTime,-20:dd-MM-yyyy HH:mm} {r.Guests,-8} {r.Status,-12}"
-            )
-        );
-
-        var listView = new ListView
-        {
-            X = 0,
-            Y = 1,
-            Width = Dim.Fill(),
             Height = Dim.Fill(),
+            ColorScheme = LayoutView.DefaultColorScheme,
+            Table = table
         };
 
-        listView.SetSource(items);
-
-        listView.KeyPress += e =>
+        tableView.CellActivated += (args) =>
         {
-            if (e.KeyEvent.Key != Key.Enter) return;
+            if (args.Row >= reservations.Count) return;
 
-            var index = listView.SelectedItem;
+            var reservation = reservations[args.Row];
 
-            if (index < 0 || index >= reservations.Count) return;
-
-            var reservation = reservations[index];
-
-            AppState.SelectedReservation = reservation;
-
-            var action = MessageBox.Query(
-                "Reservation",
-                "What do you want to do?",
-                "Edit",
-                "Delete",
-                "Cancel"
-            );
-
-            if (action == 0)
+            if (args.Col == EditCol)
             {
+                AppState.SelectedReservation = reservation;
                 nav.NavigateTo<UpdateReservationView>();
             }
-            else if (action == 1)
+            else if (args.Col == DeleteCol)
             {
+                AppState.SelectedReservation = reservation;
                 nav.NavigateTo<DeleteReservationView>();
             }
-
-            e.Handled = true;
         };
 
-        container.Add(header, listView);
+        container.Add(tableView);
 
         return new TabView.Tab(title, container);
     }

@@ -1,14 +1,19 @@
 using System.Data;
-using DebugDiner.Services;
-using DebugDiner.Domain.Abstractions;
 using Terminal.Gui;
+using DebugDiner.Domain.Abstractions;
+using DebugDiner.Services;
 
 namespace DebugDiner;
 
 public class AdminUsersView : BaseView
 {
+    private List<UserEntity> _users = [];
+
     public AdminUsersView(INavigationService nav, IUserRepository userRepository) : base(nav)
     {
+        const int EditCol   = 3;
+        const int DeleteCol = 4;
+
         SetHeaderTitle("Debug Diner | Admin Panel");
         SetContentTitle("All Registered Users");
 
@@ -27,45 +32,25 @@ public class AdminUsersView : BaseView
             Y = 3,
             Width = Dim.Fill(),
             Height = Dim.Fill() - 6,
-            ColorScheme = LayoutView.DefaultColorScheme
+            ColorScheme = LayoutView.DefaultColorScheme,
+            Table = table
         };
-
-        List<UserEntity> users = [];
-
-        void LoadUsers()
-        {
-            try
-            {
-                users = userRepository.GetItemsAsync().GetAwaiter().GetResult().ToList();
-                totalLabel.Text = $"Total: {users.Count} users";
-                table.Rows.Clear();
-                foreach (var u in users)
-                {
-                    table.Rows.Add(u.Name, u.Email, u.Role.ToString(), "[Edit]", "[Delete]");
-                }
-                tableView.Table = table;
-                tableView.SetNeedsDisplay();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.ErrorQuery("Error", $"Failed to load users: {ex.Message}", "OK");
-            }
-        }
 
         tableView.CellActivated += (args) =>
         {
-            if (args.Row >= users.Count)
+            if (args.Row >= _users.Count)
             {
                 return;
             }
-            var user = users[args.Row];
 
-            if (args.Col == 3) // Edit column
+            var user = _users[args.Row];
+
+            if (args.Col == EditCol)
             {
                 AppState.SelectedUser = user;
                 nav.NavigateTo<UpdateUserView>();
             }
-            else if (args.Col == 4) // Delete column
+            else if (args.Col == DeleteCol)
             {
                 AppState.SelectedUser = user;
                 nav.NavigateTo<DeleteUserView>();
@@ -82,6 +67,25 @@ public class AdminUsersView : BaseView
         container.Add(totalLabel, tableView);
         SetContent(container);
 
-        LoadUsers();
+        LoadUsers(userRepository, table, totalLabel, tableView);
+    }
+
+    private void LoadUsers(IUserRepository userRepository, DataTable table, Label totalLabel, TableView tableView)
+    {
+        try
+        {
+            _users = [.. userRepository.GetItemsAsync().GetAwaiter().GetResult()];
+            totalLabel.Text = $"Total: {_users.Count} users";
+            table.Rows.Clear();
+            foreach (var u in _users)
+            {
+                table.Rows.Add(u.Name, u.Email, u.Role.ToString(), "[Edit]", "[Delete]");
+            }
+            tableView.SetNeedsDisplay();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.ErrorQuery("Error", $"Failed to load users: {ex.Message}", "OK");
+        }
     }
 }
