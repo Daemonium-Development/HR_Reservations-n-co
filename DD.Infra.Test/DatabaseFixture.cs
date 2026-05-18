@@ -33,7 +33,7 @@ public class DatabaseFixture : IDisposable
     }
 
     public ArrangementRepository GetArrangementRepository() => new ArrangementRepository(_logger.Object, _db);
-    public MenuRepository GetMenuRepository() => new MenuRepository(_logger.Object, _db);
+    public MenuRepository GetMenuRepository() => new MenuRepository(_logger.Object, _db, GetArrangementRepository());
     public ReservationRepository GetReservationRepository() => new ReservationRepository(_logger.Object, _db);
     public TableRepository GetTableRepository() => new TableRepository(_logger.Object, _db);
     public UserRepository GetUserRepository() => new UserRepository(_logger.Object, _db);
