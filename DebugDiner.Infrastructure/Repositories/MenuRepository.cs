@@ -5,7 +5,7 @@ using Serilog;
 
 namespace DebugDiner.Infrastructure.Repositories;
 
-public class MenuRepository(ILogger logger, IDataService data) : IMenuRepository
+public class MenuRepository(ILogger logger, IDataService data, IArrangementRepository arrangementRepository) : IMenuRepository
 {
     public async Task<IEnumerable<DishEntity>> GetItemsAsync(IEnumerable<int>? ids = null)
     {
@@ -151,9 +151,47 @@ public class MenuRepository(ILogger logger, IDataService data) : IMenuRepository
         {
             try
             {
+                var getLinkedArrangements = data.Connection.CreateCommand();
+                getLinkedArrangements.CommandText = QueryConstants.GetByColumn
+                    .Replace("{table}", "`arrangement_dish`")
+                    .Replace("{column}", "dish_id")
+                    .Replace("{values}", dish.Id.ToString());
+                var reader = await getLinkedArrangements.ExecuteReaderAsync();
+
+                var arrangementIds = new List<int>();
+                while (reader.Read())
+                    arrangementIds.Add(reader.GetInt32(2));
+                await reader.CloseAsync();
+
+                foreach (var arrangementId in arrangementIds)
+                {
+                    var countCmd = data.Connection.CreateCommand();
+                    countCmd.CommandText = QueryConstants.CountByColumn
+                        .Replace("{table}", "`arrangement_dish`")
+                        .Replace("{column}", "arrangement_id");
+                    countCmd.Parameters.AddWithValue("@value", arrangementId);
+                    var count = (long)(await countCmd.ExecuteScalarAsync())!;
+
+                    if (count == 1)
+                    {
+                        var arrangement = await arrangementRepository.GetItemsAsync([arrangementId]);
+                        await arrangementRepository.Delete(arrangement);
+                        logger.Debug("Arrangement with id {Id} deleted (became empty).", arrangementId);
+                    }
+                    else
+                    {
+                        var deleteDishLink = data.Connection.CreateCommand();
+                        deleteDishLink.CommandText = QueryConstants.DeleteByColumn
+                            .Replace("{table}", "`arrangement_dish`")
+                            .Replace("{column}", "dish_id");
+                        deleteDishLink.Parameters.AddWithValue("@value", dish.Id);
+                        await deleteDishLink.ExecuteNonQueryAsync();
+                        logger.Debug("arrangement_dish link for dish {DishId} in arrangement {ArrangementId} removed.", dish.Id, arrangementId);
+                    }
+                }
+
                 var command = data.Connection.CreateCommand();
                 command.CommandText = QueryConstants.Delete.Replace("{table}", "`dish`");
-
                 command.Parameters.AddWithValue("@id", dish.Id);
                 await command.ExecuteNonQueryAsync();
 

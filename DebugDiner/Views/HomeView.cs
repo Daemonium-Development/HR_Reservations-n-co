@@ -26,23 +26,26 @@ public class HomeView : BaseView
                 case (3, _):
                     nav.NavigateTo<InformationView>();
                     break;
-                case (4, Role.Admin):
-                    nav.NavigateTo<CreateDishView>();
+                case (4, _):
+                    nav.NavigateTo<DishView>();
                     break;
                 case (5, Role.Admin):
-                    nav.NavigateTo<AdminUsersView>();
+                    nav.NavigateTo<CreateDishView>();
                     break;
                 case (6, Role.Admin):
-                    nav.NavigateTo<AddUserView>();
+                    nav.NavigateTo<AdminUsersView>();
                     break;
                 case (7, Role.Admin):
-                    nav.NavigateTo<ReservationsView>();
+                    nav.NavigateTo<AddUserView>();
                     break;
                 case (8, Role.Admin):
+                    nav.NavigateTo<ReservationsView>();
+                    break;
+                case (9, Role.Admin):
                     AppState.CurrentUser = null;
                     nav.NavigateTo<WelcomeView>();
                     break;
-                case (4, _):
+                case (5, _):
                     AppState.CurrentUser = null;
                     nav.NavigateTo<WelcomeView>();
                     break;
