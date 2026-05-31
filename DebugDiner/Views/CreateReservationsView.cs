@@ -23,7 +23,12 @@ public class CreateReservationsView : BaseView
             Height = Dim.Fill(),
         };
 
-        var dateLabel = new Label { X = 0, Y = 0, Text = "Date:" };
+        var dateLabel = new Label
+        {
+            X = 0,
+            Y = 0,
+            Text = "Date:"
+        };
 
         var dateInput = new DateField
         {
@@ -33,77 +38,113 @@ public class CreateReservationsView : BaseView
             Date = DateTime.Now
         };
 
-        var startTimeLabel = new Label { X = 0, Y = 3, Text = "Start Time:" };
+        var startTimeLabel = new Label
+        {
+            X = 0,
+            Y = 3,
+            Text = "Reservation Time:"
+        };
 
-        var startTimeInput = new TimeField
+        var slotTimes = GenerateTimeSlots();
+
+        var timeSlotItems = slotTimes
+            .Select(t => t.ToString(@"hh\:mm"))
+            .ToList();
+
+        var timeSlotList = new ListView(timeSlotItems)
         {
             X = 0,
             Y = 4,
             Width = Dim.Fill(),
-            Time = DateTime.Now.TimeOfDay
+            Height = 5
         };
 
-        var endTimeLabel = new Label { X = 0, Y = 6, Text = "End Time:" };
+        timeSlotList.SelectedItem = 0;
 
-        var endTimeInput = new TimeField
+        var guestsLabel = new Label
         {
             X = 0,
-            Y = 7,
-            Width = Dim.Fill(),
-            Time = DateTime.Now.TimeOfDay
+            Y = 10,
+            Text = "Guests:"
         };
-
-        var guestsLabel = new Label { X = 0, Y = 9, Text = "Guests:" };
 
         var guestInput = new TextField
         {
             X = 0,
-            Y = 10,
+            Y = 11,
             Width = Dim.Fill()
         };
 
-        var tables = tableRepository.GetItemsAsync().GetAwaiter().GetResult().ToList();
-        var reservations = reservationRepository.GetItemsAsync().GetAwaiter().GetResult().ToList();
+        var tables = tableRepository
+            .GetItemsAsync()
+            .GetAwaiter()
+            .GetResult()
+            .ToList();
 
-        var takenTableIds = reservations
-            .Where(r => r.Status == ReservationStatus.Pending ||
-                        r.Status == ReservationStatus.Confirmed)
-            .Select(r => r.TableId)
-            .ToHashSet();
+        var reservations = reservationRepository
+            .GetItemsAsync()
+            .GetAwaiter()
+            .GetResult()
+            .ToList();
 
-        var tableLabel = new Label { X = 0, Y = 12, Text = "Tables:" };
-
-        var tableItems = tables.Select(t =>
-        {
-            var isTaken = takenTableIds.Contains(t.Id);
-
-            return isTaken
-                ? $"❌ [{t.Id}] {t.Type} (cap {t.Capacity}) - TAKEN"
-                : $"✅ [{t.Id}] {t.Type} (cap {t.Capacity}) - AVAILABLE";
-        }).ToList();
-
-        var tableList = new ListView(tableItems)
+        var tableLabel = new Label
         {
             X = 0,
             Y = 13,
+            Text = "Tables:"
+        };
+
+        var tableList = new ListView(new List<string>())
+        {
+            X = 0,
+            Y = 14,
             Width = Dim.Fill(),
             Height = 6
         };
 
-        tableList.SelectedItemChanged += e =>
+        void RefreshTableAvailability()
         {
-            var selectedTable = tables[e.Item];
-
-            if (takenTableIds.Contains(selectedTable.Id))
+            if (timeSlotList.SelectedItem < 0)
             {
-                MessageBox.Query("Unavailable", "This table is already taken.", "OK");
+                return;
             }
-        };
+
+            var selectedTime = slotTimes[timeSlotList.SelectedItem];
+
+            var start = dateInput.Date.Date + selectedTime;
+            var end = start.AddHours(2);
+
+            var unavailableTableIds = reservations
+                .Where(r =>
+                    (r.Status == ReservationStatus.Pending ||
+                     r.Status == ReservationStatus.Confirmed)
+                    &&
+                    start < r.EndTime &&
+                    end > r.StartTime
+                )
+                .Select(r => r.TableId)
+                .ToHashSet();
+
+            var items = tables.Select(t =>
+            {
+                var isTaken = unavailableTableIds.Contains(t.Id);
+
+                return isTaken
+                    ? $"❌ [{t.Id}] {t.Type} (cap {t.Capacity}) - TAKEN"
+                    : $"✅ [{t.Id}] {t.Type} (cap {t.Capacity}) - AVAILABLE";
+            }).ToList();
+
+            tableList.SetSource(items);
+        }
+
+        timeSlotList.SelectedItemChanged += (_) => RefreshTableAvailability();
+
+        dateInput.DateChanged += (_) => RefreshTableAvailability();
 
         var submitBtn = new Button
         {
             X = 0,
-            Y = 20,
+            Y = 21,
             Text = "Make Reservation"
         };
 
@@ -114,28 +155,45 @@ public class CreateReservationsView : BaseView
                 return;
             }
 
-            if (tableList.SelectedItem < 0)
+            if (tableList.SelectedItem < 0 ||
+                timeSlotList.SelectedItem < 0)
+            {
+                return;
+            }
+
+            if (!int.TryParse(guestInput.Text.ToString(), out var guests) ||
+                guests <= 0)
             {
                 return;
             }
 
             var selectedTable = tables[tableList.SelectedItem];
 
-            if (takenTableIds.Contains(selectedTable.Id))
-            {
-                return;
-            }
+            var selectedTime = slotTimes[timeSlotList.SelectedItem];
 
-            if (!int.TryParse(guestInput.Text.ToString(), out var guests) || guests <= 0)
-            {
-                return;
-            }
+            var start = dateInput.Date.Date + selectedTime;
 
-            var start = dateInput.Date.Date + startTimeInput.Time;
-            var end = dateInput.Date.Date + endTimeInput.Time;
+            var end = start.AddHours(2);
 
-            if (end <= start)
+            var hasConflict = reservations.Any(r =>
+                r.TableId == selectedTable.Id
+                &&
+                (r.Status == ReservationStatus.Pending ||
+                 r.Status == ReservationStatus.Confirmed)
+                &&
+                start < r.EndTime
+                &&
+                end > r.StartTime
+            );
+
+            if (hasConflict)
             {
+                MessageBox.ErrorQuery(
+                    "Unavailable",
+                    "This table is already reserved for this time slot.",
+                    "OK"
+                );
+
                 return;
             }
 
@@ -151,26 +209,59 @@ public class CreateReservationsView : BaseView
                 Status = ReservationStatus.Pending
             };
 
-            var result = reservationRepository.Create([entity]).GetAwaiter().GetResult();
+            var result = reservationRepository
+                .Create([entity])
+                .GetAwaiter()
+                .GetResult();
 
             if (!result.Any())
             {
                 return;
             }
 
-            MessageBox.Query("Success", "Reservation created.", "OK");
+            MessageBox.Query(
+                "Success",
+                $"Reservation created.\n\nEnds at: {end:HH:mm}",
+                "OK"
+            );
+
             nav.NavigateBack();
         };
 
         container.Add(
-            dateLabel, dateInput,
-            startTimeLabel, startTimeInput,
-            endTimeLabel, endTimeInput,
-            guestsLabel, guestInput,
-            tableLabel, tableList,
+            dateLabel,
+            dateInput,
+
+            startTimeLabel,
+            timeSlotList,
+
+            guestsLabel,
+            guestInput,
+
+            tableLabel,
+            tableList,
+
             submitBtn
         );
 
         SetContent(container);
+
+        RefreshTableAvailability();
+    }
+
+    private static List<TimeSpan> GenerateTimeSlots()
+    {
+        var slots = new List<TimeSpan>();
+
+        var start = new TimeSpan(17, 0, 0);
+        var end = new TimeSpan(22, 0, 0);
+
+        while (start <= end)
+        {
+            slots.Add(start);
+            start += TimeSpan.FromMinutes(15);
+        }
+
+        return slots;
     }
 }
