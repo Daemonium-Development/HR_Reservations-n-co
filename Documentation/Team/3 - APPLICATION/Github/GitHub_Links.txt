@@ -1,0 +1,8 @@
+Link to code repository:
+https://github.com/Daemonium-Development/HR_Reservations-n-co
+
+Link to Project with Product and Sprint backlogs:
+https://github.com/Daemonium-Development/HR_Reservations-n-co/wiki
+
+Link to Wiki (full documentation):
+https://github.com/Daemonium-Development/HR_Reservations-n-co/wiki
