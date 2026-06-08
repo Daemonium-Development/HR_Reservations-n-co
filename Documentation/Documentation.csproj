@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Folder Include="Team\2A - SCRUM\Sprint Retrospectives\" />
+      <Folder Include="Team\2B - PO NEEDS AND WISHES\Presentations and video\Team presentations\" />
+    </ItemGroup>
+
+</Project>
