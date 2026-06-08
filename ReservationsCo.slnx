@@ -4,4 +4,5 @@
   <Project Path="DebugDiner.Domain/DebugDiner.Domain.csproj" />
   <Project Path="DebugDiner.Infrastructure/DebugDiner.Infrastructure.csproj" />
   <Project Path="DebugDiner/DebugDiner.csproj" />
+  <Project Path="Documentation/Documentation.csproj" />
 </Solution>
