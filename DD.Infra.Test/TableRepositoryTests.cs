@@ -2,14 +2,12 @@ using DebugDiner.Infrastructure.Repositories;
 
 using FluentAssertions;
 
-using Xunit.Abstractions;
-
 namespace DD.Infra.Test;
 
+[Collection("Database")]
 [TestCaseOrderer("DD.Infra.Test.PriorityOrderer", "DD.Infra.Test")]
-public class TableRepositoryTests(DatabaseFixture fixture, ITestOutputHelper testOutputHelper) : IClassFixture<DatabaseFixture>
+public class TableRepositoryTests(DatabaseFixture fixture) : IClassFixture<DatabaseFixture>
 {
-    private readonly ITestOutputHelper _testOutputHelper = testOutputHelper;
     private readonly TableRepository _repository = fixture.GetTableRepository();
 
     [Fact, TestPriority(1)]
@@ -93,10 +91,10 @@ public class TableRepositoryTests(DatabaseFixture fixture, ITestOutputHelper tes
     [Fact, TestPriority(8)]
     public async Task DeleteTable_ShouldReduceCount()
     {
-        var items = await _repository.GetItemsAsync();
-        _ = await _repository.Delete(items);
+        var item = await _repository.GetItemsAsync([2]);
+        _ = await _repository.Delete(item);
 
-        items = await _repository.GetItemsAsync();
-        items.Should().NotBeNull().And.HaveCount(0);
+        var items = await _repository.GetItemsAsync();
+        items.Should().NotBeNull().And.HaveCount(1);
     }
 }

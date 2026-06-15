@@ -2,16 +2,14 @@ using DebugDiner.Infrastructure.Repositories;
 
 using FluentAssertions;
 
-using Xunit.Abstractions;
-
 using BC = BCrypt.Net.BCrypt;
 
 namespace DD.Infra.Test;
 
+[Collection("Database")]
 [TestCaseOrderer("DD.Infra.Test.PriorityOrderer", "DD.Infra.Test")]
-public class UserRepositoryTests(DatabaseFixture fixture, ITestOutputHelper testOutputHelper) : IClassFixture<DatabaseFixture>
+public class UserRepositoryTests(DatabaseFixture fixture) : IClassFixture<DatabaseFixture>
 {
-    private readonly ITestOutputHelper _testOutputHelper = testOutputHelper;
     private readonly UserRepository _repository = fixture.GetUserRepository();
 
     [Fact, TestPriority(1)]
