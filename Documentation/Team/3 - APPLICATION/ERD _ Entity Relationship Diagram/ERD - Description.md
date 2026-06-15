@@ -1,6 +1,8 @@
 # Entity Relationship Diagram — Debug Diner
 
 See `ERD - Debug Diner.png` for the visual diagram.
+Onze ERD is gemaakt met de DrawSQL app online, een screenshot hiervan:
+![img.png](ERD-Debug-Diner.png)
 
 ## Entities
 

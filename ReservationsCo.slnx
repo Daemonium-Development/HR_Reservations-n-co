@@ -1,4 +1,7 @@
 ﻿<Solution>
+  <Project Path="DD.Domain.Test/DD.Domain.Test.csproj" />
+  <Project Path="DD.Application.Test/DD.Application.Test.csproj" />
+  <Project Path="DD.Presentation.Test/DD.Presentation.Test.csproj" />
   <Project Path="DD.Infra.Test/DD.Infra.Test.csproj" />
   <Project Path="DebugDiner.Application/DebugDiner.Application.csproj" />
   <Project Path="DebugDiner.Domain/DebugDiner.Domain.csproj" />

@@ -2,14 +2,12 @@ using DebugDiner.Infrastructure.Repositories;
 
 using FluentAssertions;
 
-using Xunit.Abstractions;
-
 namespace DD.Infra.Test;
 
+[Collection("Database")]
 [TestCaseOrderer("DD.Infra.Test.PriorityOrderer", "DD.Infra.Test")]
-public class ReservationRepositoryTests(DatabaseFixture fixture, ITestOutputHelper testOutputHelper) : IClassFixture<DatabaseFixture>
+public class ReservationRepositoryTests(DatabaseFixture fixture) : IClassFixture<DatabaseFixture>
 {
-    private readonly ITestOutputHelper _testOutputHelper = testOutputHelper;
     private readonly ReservationRepository _repository = fixture.GetReservationRepository();
 
     [Fact, TestPriority(1)]
