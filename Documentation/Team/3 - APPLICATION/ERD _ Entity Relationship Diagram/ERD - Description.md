@@ -1,12 +1,12 @@
-# Entity Relationship Diagram — Debug Diner
+# Entity Relationship Diagram - Debug Diner
 
-See `ERD - Debug Diner.png` for the visual diagram.
+Zie `ERD - Debug Diner.png` voor het visuele diagram.
 Onze ERD is gemaakt met de DrawSQL app online, een screenshot hiervan:
 ![img.png](ERD-Debug-Diner.png)
 
-## Entities
+## Entiteiten
 
-| Entity | Table | Description |
+| Entiteit | Tabel | Omschrijving |
 |---|---|---|
 | UserEntity | `user` | Klanten, medewerkers en admins |
 | ReservationEntity | `reservation` | Restaurantreserveringen |
@@ -15,7 +15,7 @@ Onze ERD is gemaakt met de DrawSQL app online, een screenshot hiervan:
 | DishEntity | `dish` | Menugerechten |
 | ReservationArrangement | `reservation_arrangement` | Koppeltabel reservering↔arrangement |
 
-## Relationships
+## Relaties
 
 - Een **User** kan meerdere **Reservations** plaatsen (1:N)
 - Een **Table** kan in meerdere **Reservations** voorkomen (1:N, op verschillende tijden)

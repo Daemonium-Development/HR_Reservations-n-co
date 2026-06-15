@@ -33,8 +33,8 @@
 | Kleurrijke console UI | ✅ | Terminal.GUI, LayoutView |
 
 ## Openingstijden (PO interview antwoord)
-- Ontbijt: 09:00–11:00
-- Lunch: 11:00–13:00  
-- Diner: 17:00–21:00
+- Ontbijt: 09:00-11:00
+- Lunch: 11:00-13:00
+- Diner: 17:00-21:00
 
 Tafelreservering duurt **2 uur** (antwoord PO).

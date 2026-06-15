@@ -160,3 +160,48 @@ changed — only new test projects and the `.slnx` are added.
   focus on returned `UserEntity`/`null` and the entity handed to `IUserRepository.Create`;
   Serilog log-call verification is kept light because its generic overloads are awkward to
   match in Moq.
+
+---
+
+## 2026-06-15 — Translate Team documentation to Dutch (see plan/03-translate-team-docs-to-dutch.md)
+
+Brings every prose document under `Documentation/Team` to consistent, natural Dutch. Source
+request: `requests/2026-06-documentation.md`. Only docs under `Documentation/Team` are
+touched; `Documentation/Individual` is explicitly left alone (it is already done and serves
+only as a writing-style reference). No source code, build files, or binary assets are changed.
+
+- **Decision:** Established Scrum/Agile terms stay in English (Definition of Done, Sprint,
+  Sprint Review, Sprint Planning, Daily Stand-up, Retrospective, Product Backlog, User Story,
+  Scrum Master).
+  **Why:** They are standard terminology and already written this way in the Individual docs
+  that serve as the style reference; translating them would be less conventional and
+  inconsistent across the project. User confirmed.
+
+- **Decision:** Component/view/repository/class/story/task names that double as identifiers
+  stay in English as proper names (e.g. `ReservationsView`, `UserRepository`, "Information
+  View", "User login", the "Opgeleverde taken" task lists, the `### <Story>` headings, PR /
+  branch names). Only genuinely descriptive prose around them is translated.
+  **Why:** These map to code symbols and to cross-references in other docs; translating them
+  would break consistency with the codebase and with the Individual docs. User confirmed.
+
+- **Decision:** Verbatim factual content keeps its exact wording: commit messages and author
+  names in the sprint tables, code identifiers, file paths, GitHub URLs, enum values, and
+  literal in-app strings (backtick UI text such as `"All fields are required."`, status names
+  such as `Pending`, and the `✅ AVAILABLE` / `❌ TAKEN` labels).
+  **Why:** These are a historical record or reflect what the running application actually
+  outputs (the app's UI is English); translating them would misrepresent reality. User
+  confirmed.
+
+- **Decision:** Em-dashes (and em-dash-style en-dashes) are stripped **everywhere** in the
+  Team files, including inside commit messages and code-comment lines, and replaced with a
+  plain hyphen (or the sentence is restructured). This is the one mechanical change applied
+  even to otherwise-verbatim content.
+  **Why:** The request bans em-dashes as an "AI tell"; the user chose strip-everywhere over
+  edited-prose-only. Visible, meaningful arrows (`→`, `⇒`, `↔`) are not dashes and are kept.
+
+- **Decision:** All output uses clean ASCII-style punctuation: straight quotes/apostrophes
+  (`'` `"`), no non-breaking spaces, zero-width characters, or stray BOMs. Existing
+  authored-Dutch content (including any pre-existing typos) is left intact except for the
+  English-to-Dutch translation and the character cleanup above.
+  **Why:** The request forbids "invisible (or less visible) bits and bytes" and clearly-AI
+  writing; the task is a translation/cleanup, not a content rewrite.

@@ -1,33 +1,33 @@
-# Object-Oriented Design Patterns & Concepts — Debug Diner
+# Objectgeoriënteerde ontwerppatronen en -concepten - Debug Diner
 
 ## Checklist
 
-| Concept | Used | Location |
+| Concept | Gebruikt | Locatie |
 |---|---|---|
-| Classes & Objects | ✅ | All layers |
-| Encapsulation | ✅ | All repositories, BaseEntity |
-| Inheritance | ✅ | BaseEntity → all entities; BaseView → all views |
+| Classes & Objects | ✅ | Alle lagen |
+| Encapsulation | ✅ | Alle repositories, BaseEntity |
+| Inheritance | ✅ | BaseEntity → alle entiteiten; BaseView → alle views |
 | Interfaces | ✅ | IUserRepository, IMenuRepository, IReservationRepository, ITableRepository, IArrangementRepository, IDataService, IAuthService, INavigationService |
-| Generics | ✅ | IEnumerable<T>, Task<T> throughout all repositories |
+| Generics | ✅ | IEnumerable<T>, Task<T> in alle repositories |
 | Enumerations | ✅ | Role, TableType, ArrangementType, DishCategory, ReservationStatus |
-| Properties | ✅ | All entities (get; set;) |
+| Properties | ✅ | Alle entiteiten (get; set;) |
 | Dependency Injection | ✅ | Program.cs, ServiceExtensions.cs |
-| Polymorphism | ✅ | BaseView subclasses, Repository implementations via interfaces |
-| Composition | ✅ | MenuRepository depends on IArrangementRepository |
-| Async/Await | ✅ | All repository methods return Task<T> |
+| Polymorphism | ✅ | BaseView-subklassen, repository-implementaties via interfaces |
+| Composition | ✅ | MenuRepository hangt af van IArrangementRepository |
+| Async/Await | ✅ | Alle repository-methoden retourneren Task<T> |
 
 ---
 
 ## 1. Encapsulation
 
-**Where:** `DebugDiner.Domain/Entities/BaseEntity.cs` (lines 13–19) and all entity classes
+**Waar:** `DebugDiner.Domain/Entities/BaseEntity.cs` (regels 13-19) en alle entiteitsklassen
 
-**Why:** Properties expose data through controlled `get; set;` access rather than public fields. This ensures EF Core can track changes and prevents invalid state.
+**Waarom:** Properties stellen data beschikbaar via gecontroleerde `get; set;`-toegang in plaats van publieke velden. Hierdoor kan EF Core wijzigingen volgen en wordt een ongeldige status voorkomen.
 
-**Why not public fields:** Public fields bypass validation, cannot be used as EF Core column mappings, and break encapsulation contracts.
+**Waarom geen publieke velden:** Publieke velden omzeilen validatie, kunnen niet als EF Core-kolomtoewijzingen worden gebruikt en doorbreken de afspraken rond encapsulation.
 
 ```csharp
-// BaseEntity.cs — lines 13-19
+// BaseEntity.cs - lines 13-19
 public required int Id { get; set; }
 [Column("created_at")]
 public required DateTime CreatedAt { get; set; }
@@ -41,20 +41,20 @@ GitHub: https://github.com/Daemonium-Development/HR_Reservations-n-co/blob/main/
 
 ## 2. Inheritance
 
-**Where:** `DebugDiner.Domain/Entities/` — all entities extend `BaseEntity`. `DebugDiner/Views/` — all views extend `BaseView`.
+**Waar:** `DebugDiner.Domain/Entities/` - alle entiteiten breiden `BaseEntity` uit. `DebugDiner/Views/` - alle views breiden `BaseView` uit.
 
-**Why:** `BaseEntity` centralises `Id`, `CreatedAt`, `UpdatedAt`, `Equals()`, and `GetHashCode()` — avoiding code duplication across 5 entity classes. `BaseView` centralises the Terminal.GUI layout (header, nav panel, content frame) shared by all screens.
+**Waarom:** `BaseEntity` centraliseert `Id`, `CreatedAt`, `UpdatedAt`, `Equals()` en `GetHashCode()`, wat codeduplicatie over 5 entiteitsklassen voorkomt. `BaseView` centraliseert de Terminal.GUI-layout (header, nav-paneel, content frame) die door alle schermen wordt gedeeld.
 
-**Why not interfaces alone:** Interfaces define contracts but cannot provide shared implementation. Inheritance is appropriate here because entities share both structure AND behaviour (equality comparison).
+**Waarom niet alleen interfaces:** Interfaces definiëren afspraken maar kunnen geen gedeelde implementatie bieden. Overerving is hier passend omdat entiteiten zowel structuur ALS gedrag delen (gelijkheidsvergelijking).
 
 ```csharp
-// ReservationEntity.cs — line 4
+// ReservationEntity.cs - line 4
 public class ReservationEntity : BaseEntity
 
-// UserRepository.cs — line 8
+// UserRepository.cs - line 8
 public class UserRepository(ILogger logger, IDataService data) : IUserRepository
 
-// CreateReservationsView.cs — line 7
+// CreateReservationsView.cs - line 7
 public class CreateReservationsView : BaseView
 ```
 
@@ -64,11 +64,11 @@ GitHub: https://github.com/Daemonium-Development/HR_Reservations-n-co/blob/main/
 
 ## 3. Interfaces
 
-**Where:** `DebugDiner.Domain/Abstractions/` — IUserRepository, IMenuRepository, IReservationRepository, ITableRepository, IArrangementRepository, IDataService. `DebugDiner.Application/Abstractions/` — IAuthService. `DebugDiner/Services/` — INavigationService.
+**Waar:** `DebugDiner.Domain/Abstractions/` - IUserRepository, IMenuRepository, IReservationRepository, ITableRepository, IArrangementRepository, IDataService. `DebugDiner.Application/Abstractions/` - IAuthService. `DebugDiner/Services/` - INavigationService.
 
-**Why:** Interfaces decouple the Application layer from Infrastructure. Services depend on `IUserRepository`, not `UserRepository`. This means the database can be swapped without touching application logic (Dependency Inversion Principle).
+**Waarom:** Interfaces ontkoppelen de Application-laag van Infrastructure. Services hangen af van `IUserRepository`, niet van `UserRepository`. Hierdoor kan de database worden vervangen zonder de applicatielogica aan te raken (Dependency Inversion Principle).
 
-**Why not abstract class:** Repositories share no common implementation — only a contract. An abstract class would force artificial coupling between unrelated repositories.
+**Waarom geen abstracte klasse:** Repositories delen geen gemeenschappelijke implementatie, alleen een afspraak. Een abstracte klasse zou kunstmatige koppeling tussen ongerelateerde repositories afdwingen.
 
 ```csharp
 // IUserRepository.cs
@@ -87,14 +87,14 @@ GitHub: https://github.com/Daemonium-Development/HR_Reservations-n-co/blob/main/
 
 ## 4. Generics
 
-**Where:** All repository interfaces and implementations — `IEnumerable<T>`, `Task<T>` (e.g. `Task<IEnumerable<UserEntity>>`).
+**Waar:** Alle repository-interfaces en -implementaties - `IEnumerable<T>`, `Task<T>` (bijv. `Task<IEnumerable<UserEntity>>`).
 
-**Why:** Generic collections allow type-safe batch operations (create/update/delete multiple items) without boxing overhead or casts. `Task<T>` enables async return values with a known type.
+**Waarom:** Generieke collecties maken type-veilige batchbewerkingen mogelijk (meerdere items aanmaken/bijwerken/verwijderen) zonder boxing-overhead of casts. `Task<T>` maakt asynchrone retourwaarden met een bekend type mogelijk.
 
-**Why not `object` or non-generic collections:** Would require casting, lose compile-time type safety, and reduce readability.
+**Waarom geen `object` of niet-generieke collecties:** Dat zou casten vereisen, type-veiligheid tijdens compileren verliezen en de leesbaarheid verminderen.
 
 ```csharp
-// IMenuRepository.cs — line 5
+// IMenuRepository.cs - line 5
 Task<IEnumerable<DishEntity>> GetItemsAsync(IEnumerable<int>? ids = null);
 Task<IEnumerable<DishEntity>> Create(IEnumerable<DishEntity> dishes);
 Task<IEnumerable<DishEntity>> Update(IEnumerable<DishEntity> dishes);
@@ -107,11 +107,11 @@ GitHub: https://github.com/Daemonium-Development/HR_Reservations-n-co/blob/main/
 
 ## 5. Enumerations
 
-**Where:** `DebugDiner.Domain/Entities/Enums.cs` — Role, TableType, ArrangementType, DishCategory, ReservationStatus.
+**Waar:** `DebugDiner.Domain/Entities/Enums.cs` - Role, TableType, ArrangementType, DishCategory, ReservationStatus.
 
-**Why:** Enums restrict values to a known set, preventing invalid states like `role = "superadmin"`. They are stored as integers in SQLite (space-efficient) and readable in code.
+**Waarom:** Enums beperken waarden tot een bekende set en voorkomen ongeldige statussen zoals `role = "superadmin"`. Ze worden als gehele getallen opgeslagen in SQLite (ruimtebesparend) en zijn leesbaar in code.
 
-**Why not string constants:** Strings are error-prone (typos), not type-safe, and make switch/match exhaustiveness checking impossible.
+**Waarom geen stringconstanten:** Strings zijn foutgevoelig (typefouten), niet type-veilig en maken volledigheidscontrole bij switch/match onmogelijk.
 
 ```csharp
 // Enums.cs
@@ -128,14 +128,14 @@ GitHub: https://github.com/Daemonium-Development/HR_Reservations-n-co/blob/main/
 
 ## 6. Dependency Injection
 
-**Where:** `DebugDiner.Infrastructure/ServiceExtensions.cs` (lines 18–24) and `DebugDiner/Program.cs` (lines 51–67).
+**Waar:** `DebugDiner.Infrastructure/ServiceExtensions.cs` (regels 18-24) en `DebugDiner/Program.cs` (regels 51-67).
 
-**Why:** DI wires interfaces to implementations at startup without hard-coding `new UserRepository()` throughout the codebase. This makes testing easy (inject mocks) and satisfies the Dependency Inversion Principle.
+**Waarom:** DI koppelt interfaces aan implementaties bij het opstarten zonder `new UserRepository()` overal in de codebase vast te leggen. Dit maakt testen eenvoudig (mocks injecteren) en voldoet aan het Dependency Inversion Principle.
 
-**Why not `new` keyword:** Manual instantiation creates tight coupling, makes testing impossible without real databases, and requires changing every call site to swap implementations.
+**Waarom geen `new`-keyword:** Handmatige instantiatie zorgt voor sterke koppeling, maakt testen zonder echte databases onmogelijk en vereist dat elke aanroeplocatie wordt aangepast om implementaties te wisselen.
 
 ```csharp
-// ServiceExtensions.cs — lines 18-24
+// ServiceExtensions.cs - lines 18-24
 services.AddSingleton<IDataService, DataService>();
 services.AddSingleton<IArrangementRepository, ArrangementRepository>();
 services.AddSingleton<IMenuRepository, MenuRepository>();
@@ -150,12 +150,12 @@ GitHub: https://github.com/Daemonium-Development/HR_Reservations-n-co/blob/main/
 
 ## 7. Polymorphism
 
-**Where:** All repository classes implement their interface — `UserRepository : IUserRepository`, etc. All view classes extend `BaseView`.
+**Waar:** Alle repository-klassen implementeren hun interface - `UserRepository : IUserRepository`, enz. Alle view-klassen breiden `BaseView` uit.
 
-**Why:** Application services accept `IUserRepository` (the interface type). The actual implementation (`UserRepository`) is resolved at runtime by DI. This is runtime polymorphism: the same method call behaves differently based on the actual object.
+**Waarom:** Application-services accepteren `IUserRepository` (het interfacetype). De daadwerkelijke implementatie (`UserRepository`) wordt tijdens runtime door DI opgelost. Dit is runtime-polymorfisme: dezelfde methodeaanroep gedraagt zich anders afhankelijk van het daadwerkelijke object.
 
 ```csharp
-// Runtime polymorphism — the service doesn't know which implementation it receives
+// Runtime polymorphism - the service doesn't know which implementation it receives
 public class AuthService(IUserRepository userRepository, ILogger logger) : IAuthService
 {
     // userRepository could be UserRepository or a mock in tests
@@ -168,12 +168,12 @@ GitHub: https://github.com/Daemonium-Development/HR_Reservations-n-co/blob/main/
 
 ## 8. Composition
 
-**Where:** `MenuRepository` composes `IArrangementRepository` — `MenuRepository(ILogger logger, IDataService data, IArrangementRepository arrangementRepository)`.
+**Waar:** `MenuRepository` componeert `IArrangementRepository` - `MenuRepository(ILogger logger, IDataService data, IArrangementRepository arrangementRepository)`.
 
-**Why:** Dishes can have associated arrangements. Rather than duplicating arrangement logic, `MenuRepository` delegates to the `IArrangementRepository`. This is composition over inheritance — MenuRepository "has-a" ArrangementRepository.
+**Waarom:** Gerechten kunnen bijbehorende arrangementen hebben. In plaats van arrangementlogica te dupliceren, delegeert `MenuRepository` naar de `IArrangementRepository`. Dit is compositie boven overerving - MenuRepository "heeft-een" ArrangementRepository.
 
 ```csharp
-// MenuRepository.cs — line 8
+// MenuRepository.cs - line 8
 public class MenuRepository(ILogger logger, IDataService data, IArrangementRepository arrangementRepository)
     : IMenuRepository
 ```
@@ -184,11 +184,11 @@ GitHub: https://github.com/Daemonium-Development/HR_Reservations-n-co/blob/main/
 
 ## 9. Async/Await
 
-**Where:** All repository methods — `GetItemsAsync`, `Create`, `Update`, `Delete`. DataService — `StartAsync`, `StopAsync`, `RestartAsync`.
+**Waar:** Alle repository-methoden - `GetItemsAsync`, `Create`, `Update`, `Delete`. DataService - `StartAsync`, `StopAsync`, `RestartAsync`.
 
-**Why:** Database I/O is inherently blocking. Async/await frees the thread while waiting for SQLite, keeping the Terminal.GUI application responsive.
+**Waarom:** Database-I/O is inherent blokkerend. Async/await maakt de thread vrij tijdens het wachten op SQLite, waardoor de Terminal.GUI-applicatie responsief blijft.
 
-**Why not synchronous:** Synchronous DB calls block the UI thread, causing the console application to freeze during queries.
+**Waarom niet synchroon:** Synchrone DB-aanroepen blokkeren de UI-thread, waardoor de console-applicatie tijdens query's bevriest.
 
 ```csharp
 // UserRepository.cs

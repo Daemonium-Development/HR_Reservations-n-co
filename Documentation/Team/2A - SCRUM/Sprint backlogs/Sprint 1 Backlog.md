@@ -8,13 +8,13 @@
 | **Periode** | 2026-03-09 → 2026-03-22 |
 | **Scrum Master** | Quintin Blume |
 | **Commits** | 5 |
-| **Focus** | Project setup, SQL scripts, entities, UserRepository — foundation sprint |
+| **Focus** | Project setup, SQL scripts, entities, UserRepository - foundation sprint |
 
 ---
 
 ## Sprintdoel
 
-Project setup, SQL scripts, entities, UserRepository — foundation sprint
+Project setup, SQL scripts, entities, UserRepository - foundation sprint
 
 ## Opgeleverde taken
 

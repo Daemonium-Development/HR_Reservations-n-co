@@ -1,4 +1,4 @@
-# PO Interview — Debug Diner
+# PO Interview - Debug Diner
 
 [← Home](Home)
 
@@ -14,7 +14,7 @@ Ons is gevraagd een reserveringssysteem te maken voor een restaurant met 8× 2-p
 
 ---
 
-## Interview — Vragen
+## Interview - Vragen
 
 ## Samenvating
 
@@ -25,10 +25,10 @@ Ons is gevraagd een reserveringssysteem te maken voor een restaurant. Dit restau
 - 8 personen bar
 
 Als mensen een reservering gaan plaatsen hebben ze de keus tussen de volgende arragement:
-- 2 course dinner
-- 3 course dinner
-- 4 course dinner 
-- wine arrangement
+- 2-gangendiner
+- 3-gangendiner
+- 4-gangendiner
+- wijnarrangement
 
 ## **Inleiding**
 
