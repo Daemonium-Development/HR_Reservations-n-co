@@ -205,3 +205,44 @@ only as a writing-style reference). No source code, build files, or binary asset
   English-to-Dutch translation and the character cleanup above.
   **Why:** The request forbids "invisible (or less visible) bits and bytes" and clearly-AI
   writing; the task is a translation/cleanup, not a content rewrite.
+
+---
+
+## 2026-06-15 — Migrate documentation from Markdown to .docx (see plan/04-md-to-docx-migration.md)
+
+Generates a `.docx` copy of every Markdown file under `Documentation/Team` and
+`Documentation/Individual/Soufian Manai, 1114385`, embedding images at their original
+positions. Source request: `requests/2026-06-documents-migration.md`. The original `.md`
+files are kept; the `.docx` copies live side by side. No application code or other
+Individual folders are touched.
+
+- **Decision:** Conversion is done with **Pandoc** (installed via
+  `winget install --id JohnMacFarlane.Pandoc`), one invocation per file, with the working
+  directory set to each Markdown file's own directory.
+  **Why:** Pandoc is the standard, high-fidelity Markdown→docx converter; it handles the
+  complex GFM tables in the Team docs and embeds referenced images automatically. Running
+  from the file's own directory makes the relative `![](img.png)` paths resolve and drops
+  the `.docx` side by side with no path rewriting. User chose Pandoc over a hand-written
+  .NET (Markdig + OpenXML) converter or a Python pipeline.
+
+- **Decision:** A reusable PowerShell script
+  (`Documentation/Convert-MarkdownToDocx.ps1`) is committed to the repo and regenerates all
+  in-scope `.docx`. Its scope is hard-coded to the two roots above; other `Documentation/
+  Individual/*` folders are intentionally excluded.
+  **Why:** The docs are still actively edited (they were just translated to Dutch), so a
+  one-command regeneration is worth keeping. Hard-coding the scope encodes the request's
+  explicit limit ("only `/Team` and `/Individual/Soufian Manai, 1114385/*`"). User chose
+  "tool/script + generated files" over one-time generation.
+
+- **Decision:** The generated `.docx` binaries are **committed to git**, side by side with
+  the `.md` files and sharing the same base name (`Definition of Done.md` →
+  `Definition of Done.docx`). A `.gitattributes` entry marks `*.docx` as binary.
+  **Why:** The `.docx` set is the actual requested deliverable, so it belongs in the repo;
+  marking it binary avoids noisy/garbage textual diffs. User chose "commit them."
+
+- **Decision:** Scope is exactly the `*.md` files (23 of them) under the two roots. The
+  original `.md` files are **not** deleted. Non-Markdown assets in those trees
+  (`.txt`, `.xlsx`, `.gif`, the source `.png` images) are not converted, and no other
+  `Documentation/Individual/*` author folders are touched.
+  **Why:** The request says "make a copy of each markdown file" and "don't delete the old
+  markdown files," and names only those two roots.
