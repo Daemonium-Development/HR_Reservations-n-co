@@ -160,3 +160,89 @@ changed — only new test projects and the `.slnx` are added.
   focus on returned `UserEntity`/`null` and the entity handed to `IUserRepository.Create`;
   Serilog log-call verification is kept light because its generic overloads are awkward to
   match in Moq.
+
+---
+
+## 2026-06-15 — Translate Team documentation to Dutch (see plan/03-translate-team-docs-to-dutch.md)
+
+Brings every prose document under `Documentation/Team` to consistent, natural Dutch. Source
+request: `requests/2026-06-documentation.md`. Only docs under `Documentation/Team` are
+touched; `Documentation/Individual` is explicitly left alone (it is already done and serves
+only as a writing-style reference). No source code, build files, or binary assets are changed.
+
+- **Decision:** Established Scrum/Agile terms stay in English (Definition of Done, Sprint,
+  Sprint Review, Sprint Planning, Daily Stand-up, Retrospective, Product Backlog, User Story,
+  Scrum Master).
+  **Why:** They are standard terminology and already written this way in the Individual docs
+  that serve as the style reference; translating them would be less conventional and
+  inconsistent across the project. User confirmed.
+
+- **Decision:** Component/view/repository/class/story/task names that double as identifiers
+  stay in English as proper names (e.g. `ReservationsView`, `UserRepository`, "Information
+  View", "User login", the "Opgeleverde taken" task lists, the `### <Story>` headings, PR /
+  branch names). Only genuinely descriptive prose around them is translated.
+  **Why:** These map to code symbols and to cross-references in other docs; translating them
+  would break consistency with the codebase and with the Individual docs. User confirmed.
+
+- **Decision:** Verbatim factual content keeps its exact wording: commit messages and author
+  names in the sprint tables, code identifiers, file paths, GitHub URLs, enum values, and
+  literal in-app strings (backtick UI text such as `"All fields are required."`, status names
+  such as `Pending`, and the `✅ AVAILABLE` / `❌ TAKEN` labels).
+  **Why:** These are a historical record or reflect what the running application actually
+  outputs (the app's UI is English); translating them would misrepresent reality. User
+  confirmed.
+
+- **Decision:** Em-dashes (and em-dash-style en-dashes) are stripped **everywhere** in the
+  Team files, including inside commit messages and code-comment lines, and replaced with a
+  plain hyphen (or the sentence is restructured). This is the one mechanical change applied
+  even to otherwise-verbatim content.
+  **Why:** The request bans em-dashes as an "AI tell"; the user chose strip-everywhere over
+  edited-prose-only. Visible, meaningful arrows (`→`, `⇒`, `↔`) are not dashes and are kept.
+
+- **Decision:** All output uses clean ASCII-style punctuation: straight quotes/apostrophes
+  (`'` `"`), no non-breaking spaces, zero-width characters, or stray BOMs. Existing
+  authored-Dutch content (including any pre-existing typos) is left intact except for the
+  English-to-Dutch translation and the character cleanup above.
+  **Why:** The request forbids "invisible (or less visible) bits and bytes" and clearly-AI
+  writing; the task is a translation/cleanup, not a content rewrite.
+
+---
+
+## 2026-06-15 — Migrate documentation from Markdown to .docx (see plan/04-md-to-docx-migration.md)
+
+Generates a `.docx` copy of every Markdown file under `Documentation/Team` and
+`Documentation/Individual/Soufian Manai, 1114385`, embedding images at their original
+positions. Source request: `requests/2026-06-documents-migration.md`. The original `.md`
+files are kept; the `.docx` copies live side by side. No application code or other
+Individual folders are touched.
+
+- **Decision:** Conversion is done with **Pandoc** (installed via
+  `winget install --id JohnMacFarlane.Pandoc`), one invocation per file, with the working
+  directory set to each Markdown file's own directory.
+  **Why:** Pandoc is the standard, high-fidelity Markdown→docx converter; it handles the
+  complex GFM tables in the Team docs and embeds referenced images automatically. Running
+  from the file's own directory makes the relative `![](img.png)` paths resolve and drops
+  the `.docx` side by side with no path rewriting. User chose Pandoc over a hand-written
+  .NET (Markdig + OpenXML) converter or a Python pipeline.
+
+- **Decision:** A reusable PowerShell script
+  (`Documentation/Convert-MarkdownToDocx.ps1`) is committed to the repo and regenerates all
+  in-scope `.docx`. Its scope is hard-coded to the two roots above; other `Documentation/
+  Individual/*` folders are intentionally excluded.
+  **Why:** The docs are still actively edited (they were just translated to Dutch), so a
+  one-command regeneration is worth keeping. Hard-coding the scope encodes the request's
+  explicit limit ("only `/Team` and `/Individual/Soufian Manai, 1114385/*`"). User chose
+  "tool/script + generated files" over one-time generation.
+
+- **Decision:** The generated `.docx` binaries are **committed to git**, side by side with
+  the `.md` files and sharing the same base name (`Definition of Done.md` →
+  `Definition of Done.docx`). A `.gitattributes` entry marks `*.docx` as binary.
+  **Why:** The `.docx` set is the actual requested deliverable, so it belongs in the repo;
+  marking it binary avoids noisy/garbage textual diffs. User chose "commit them."
+
+- **Decision:** Scope is exactly the `*.md` files (23 of them) under the two roots. The
+  original `.md` files are **not** deleted. Non-Markdown assets in those trees
+  (`.txt`, `.xlsx`, `.gif`, the source `.png` images) are not converted, and no other
+  `Documentation/Individual/*` author folders are touched.
+  **Why:** The request says "make a copy of each markdown file" and "don't delete the old
+  markdown files," and names only those two roots.

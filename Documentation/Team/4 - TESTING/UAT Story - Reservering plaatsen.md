@@ -1,8 +1,8 @@
-# User Acceptance Test Story — Debug Diner
+# User Acceptance Test Story - Debug Diner
 
 **Versie:** 1.0  
 **Datum:** Juni 2026  
-**Gebaseerd op:** Codebase `HR_Reservations-n-co` — branch `main`
+**Gebaseerd op:** Codebase `HR_Reservations-n-co` - branch `main`
 
 ---
 
@@ -25,7 +25,7 @@ Als klant van Debug Diner wil ik een account kunnen aanmaken, inloggen en een ta
 
 ---
 
-### Scenario 1 — Succesvol registreren
+### Scenario 1 - Succesvol registreren
 
 **Startconditie:** De applicatie is gestart en het welkomstscherm is zichtbaar.
 
@@ -42,14 +42,14 @@ Als klant van Debug Diner wil ik een account kunnen aanmaken, inloggen en een ta
 
 ---
 
-### Scenario 2 — Registratie met ontbrekende velden
+### Scenario 2 - Registratie met ontbrekende velden
 
 **Startconditie:** Registratiescherm is geopend.
 
 | Stap | Actie (tester) | Verwacht resultaat |
 |---|---|---|
-| 1 | Laat het veld **Email** leeg | — |
-| 2 | Vul naam en wachtwoord wel in | — |
+| 1 | Laat het veld **Email** leeg | - |
+| 2 | Vul naam en wachtwoord wel in | - |
 | 3 | Klik op **Register** | Foutmelding: `"All fields are required."` |
 | 4 | Vul alsnog het emailveld in en klik op **Register** | Succesvol geregistreerd |
 
@@ -57,7 +57,7 @@ Als klant van Debug Diner wil ik een account kunnen aanmaken, inloggen en een ta
 
 ---
 
-### Scenario 3 — Inloggen met geldige gegevens
+### Scenario 3 - Inloggen met geldige gegevens
 
 **Startconditie:** Account bestaat (aangemaakt in Scenario 1 of geseed via DataSeeder).
 
@@ -72,14 +72,14 @@ Als klant van Debug Diner wil ik een account kunnen aanmaken, inloggen en een ta
 
 ---
 
-### Scenario 4 — Inloggen met ongeldig wachtwoord
+### Scenario 4 - Inloggen met ongeldig wachtwoord
 
 **Startconditie:** Loginscherm is geopend.
 
 | Stap | Actie (tester) | Verwacht resultaat |
 |---|---|---|
-| 1 | Vul een geldig emailadres in | — |
-| 2 | Vul een **fout** wachtwoord in | — |
+| 1 | Vul een geldig emailadres in | - |
+| 2 | Vul een **fout** wachtwoord in | - |
 | 3 | Klik op **Login** | Foutmelding: `"Invalid email or password."` |
 | 4 | Gebruiker blijft op loginscherm | Geen navigatie naar homescherm |
 
@@ -87,7 +87,7 @@ Als klant van Debug Diner wil ik een account kunnen aanmaken, inloggen en een ta
 
 ---
 
-### Scenario 5 — Reservering plaatsen (happy path)
+### Scenario 5 - Reservering plaatsen (happy path)
 
 **Startconditie:** Gebruiker is ingelogd als klant.
 
@@ -105,14 +105,14 @@ Als klant van Debug Diner wil ik een account kunnen aanmaken, inloggen en een ta
 
 ---
 
-### Scenario 6 — Reservering plaatsen op bezette tafel
+### Scenario 6 - Reservering plaatsen op bezette tafel
 
 **Startconditie:** Er bestaat al een reservering voor tafel 1 op 17:00.
 
 | Stap | Actie (tester) | Verwacht resultaat |
 |---|---|---|
 | 1 | Navigeer naar **Make Reservation** | Reserveringsscherm opent |
-| 2 | Selecteer dezelfde datum als de bestaande reservering | — |
+| 2 | Selecteer dezelfde datum als de bestaande reservering | - |
 | 3 | Selecteer tijdslot `17:00` | Tafel 1 toont `❌ TAKEN` in de tafelslijst |
 | 4 | Selecteer tafel 1 (`❌ TAKEN`) en klik op **Make Reservation** | Foutdialoog: `"This table is already reserved for this time slot."` |
 | 5 | Selecteer een ander tijdslot (bijv. `19:15`) | Tafel 1 toont nu `✅ AVAILABLE` (overlap is voorbij) |
@@ -122,14 +122,14 @@ Als klant van Debug Diner wil ik een account kunnen aanmaken, inloggen en een ta
 
 ---
 
-### Scenario 7 — Reservering met ongeldig aantal gasten
+### Scenario 7 - Reservering met ongeldig aantal gasten
 
 **Startconditie:** Make Reservation scherm is geopend.
 
 | Stap | Actie (tester) | Verwacht resultaat |
 |---|---|---|
-| 1 | Selecteer datum, tijdslot en tafel correct | — |
-| 2 | Laat het veld **Guests** leeg (of vul `0` in) | — |
+| 1 | Selecteer datum, tijdslot en tafel correct | - |
+| 2 | Laat het veld **Guests** leeg (of vul `0` in) | - |
 | 3 | Klik op **Make Reservation** | Geen reservering aangemaakt; geen foutmelding (veld wordt genegeerd) |
 | 4 | Vul `2` in het Guests-veld en klik opnieuw | Reservering succesvol aangemaakt |
 
@@ -137,7 +137,7 @@ Als klant van Debug Diner wil ik een account kunnen aanmaken, inloggen en een ta
 
 ---
 
-### Scenario 8 — Reservering bekijken en annuleren
+### Scenario 8 - Reservering bekijken en annuleren
 
 **Startconditie:** Gebruiker heeft minstens één actieve reservering.
 

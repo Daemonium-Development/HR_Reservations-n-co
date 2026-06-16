@@ -1,8 +1,8 @@
-# Definition of Done — Debug Diner
+# Definition of Done - Debug Diner
 
-A user story is considered **Done** when ALL of the following criteria are met:
+Een user story wordt als **Done** beschouwd wanneer aan ALLE onderstaande criteria is voldaan:
 
-| # | Criterium | Check |
+| # | Criterium | Controle |
 |---|---|---|
 | 1 | Code werkt correct in C# (.NET 10.0) | ✅ |
 | 2 | Unit tests geschreven én geslaagd (xUnit + FluentAssertions) | ✅ |
@@ -20,9 +20,9 @@ A user story is considered **Done** when ALL of the following criteria are met:
 - Minimaal één teamlid reviewt de PR vóór merge
 - Review-comments zijn constructief en oplossingsgericht
 
-## Scrum ceremonies
+## Scrum-ceremonies
 
-| Ceremony | Wanneer | Duur |
+| Ceremonie | Wanneer | Duur |
 |---|---|---|
 | Sprint Planning | Maandag 20:00 (Discord) | ~60 min |
 | Daily Stand-up | Woensdag 20:00 (Discord) | ~15 min |

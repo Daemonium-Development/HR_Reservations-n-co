@@ -229,7 +229,9 @@ Dit zorgt er uiteindelijk voor dat de functionaliteit niet aangepast word, maar 
 
 **Reflectie op mijn bijdrage**
 
-Ook deze sprint voor mij leek weinig nuttig voor mij
+Ook deze sprint voor mij leek weinig nuttig voor mij, maar het team heeft mijn persoonlijke situatie heel fijn opgepakt.
+Ik zat de laatste twee sprints niet helemaal lekker met mijn werk situatie en andere persoonlijke moeilijkheden waardoor ik maar half werk kon leveren.
+Door toch een bijdrage te kunnen leveren--zoals dus coding standards en stijl--heeft het team mij heel fijn ondervangen.
 
 ---
 
